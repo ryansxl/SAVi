@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SAVi</title>
+
+  <!-- imported javascript libs -->
+  <script src="js/libs/jquery.3.3.1.min.js"></script>
+  <script src="js/libs/jquery-ui.1.12.1.min.js"></script>
+  <script src="js/libs/jquery.balloon.min.js"></script>
+  <script src='js/libs/jquery.minicolors.js'></script>  <!-- for sidebar colorpickers -->
+  <script src='js/libs/jquery.dataTables.min.js'></script> <!-- for sidebar group/entities tables -->
+  <script src="js/libs/jquery.scrollTo.2.1.2.min.js"></script>
+  <script src="js/libs/jquery-ui-slider-pips.min.js"></script>
+  <script src="js/libs/jquery.mswitch.js"></script>
+
+  <script src="js/libs/bootstrap.3.3.7.min.js"></script>
+  <script src="js/libs/numeric.1.2.6.min.js"></script>
+  <script src="js/libs/interact.1.3.3.min.js"></script>
+
+  <!-- D3 Libraries -->
+  <script src="js/libs/d3.v4.js"></script>
+  <script src="js/libs/d3-xyzoom.js"></script>
+  <script src="https://d3js.org/d3-contour.v1.min.js"></script>
+  <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+  <script src="js/libs/saveSvgAsPng.js"></script>
+  <script src="js/libs/change_color.js"></script>
+
+  <!-- my javascript files -->
+  <script src="js/lens.js"></script>
+  <script src="js/sidebar.js"></script>
+  <script src="js/my_bubbleset.js"></script>
+
+  <script src="js/storyline.js"></script>
+  <script src="js/lens_lst.js"></script>
+  <script src="js/groups_renderer.js"></script>
+  <script src="js/main.js"></script>
+
+  <script src="js/lenses/trend_lens.js"></script>
+  <script src="js/lenses/outlier_detection_lens.js"></script>
+  <script src="js/lenses/groups_lens.js"></script>
+  <script src="js/lenses/egoline_lens.js"></script>
+
+  <!-- imported CSS libs -->
+  <link rel="stylesheet" href="css/libs/bootstrap.3.3.7.min.css">
+  <link rel="stylesheet" href="css/libs/jquery.minicolors.css">
+  <link rel="stylesheet" href="css/libs/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="css/libs/jquery-ui.1.12.1.min.css">
+  <link rel="stylesheet" href="css/libs/jquery-ui-slider-pips.min.css">
+  <link rel="stylesheet" href="css/libs/jquery.mswitch.css">
+
+  <!-- my CSS files -->
+  <link rel="stylesheet" href="css/all_chart_stylings.css">
+
+  <!--Import Google Icon Font-->
+
+</head>
+
+<body onload="go()">
+
+  <div id='sidebar'>
+    <span id="analysis_mode_flag" class="sidebar_title" style='margin-bottom:10px;'>
+      <img class="mode_icons active" title="Storyline Mode" id="Storyline_mode" src="img/storyline-icon.png" >
+      <img class="mode_icons" title="Group Mode" id="Group_mode" src="img/group-icon.png" >
+      <img class="mode_icons" title="Trend Mode" id="Trend_mode" src="img/trend-icon.png" >
+      <img class="mode_icons" title="Egoline Mode" id="Line_mode" src="img/egoline-icon.png" >
+      <img class="mode_icons" title="Association Mode" id="Outlier_mode" src="img/outlier-icon.png" >
+      <img class="mode_icons" title="Context Mode" id="Context_mode" src="img/4.png" >
+    </span>
+<!--     <span id='filter_options_bar' class='sidebar_title'>Filter<span class="glyphicon glyphicon-align-justify"></span></span>
+      <div id='filter_options_div'> -->
+        <!-- <select class="form-control" id="attributes_dropdown"></select>
+        <table id="filter_options_table"></table> -->
+<!--       </div> -->
+ 
+    <!-- <span id='event_list_bar' class='sidebar_title'>Events<span class="glyphicon glyphicon-align-justify"></span></span>
+      <div id='event_list_div'></div> -->
+
+    <span id='chart_options_bar' class='sidebar_title'>Chart Options <span class="glyphicon glyphicon-align-justify"></span></span>
+
+    <div id='chart_options_div' class='sidebar_options_div'>
+      <table id='chart_options_table' class='sidebar_options_table'>
+        <tr>
+          <td>Dataset</td>
+          <td colspan='2'>
+            <select class="form-control" id="dataset_dropdown">
+              <option>EpiSimS</option>
+              <option selected>nba</option>
+              <option>PNNL</option>
+              <option>Matrix</option>
+              <!-- <option>Star Wars</option> -->
+              <!-- Only 300.tsv works fast enough -->
+              <!-- <option>Tech Co Acquisitions</option> -->
+              <!-- <option>Star Wars</option> -->
+              <!-- <option>WW2</option> -->
+            </select>
+          </td>
+        </tr>
+
+        <tr>
+          <td>Chart Scaling<span style='float:right'>
+          </span></td>
+          <td>
+            <input id="scale_x_row_button" type="submit" value="X">
+            <input id="scale_y_row_button" type="submit" value="Y">
+            <script>
+            var x_scaling_on = true;
+            $("#scale_x_row_button").click(function(btn){
+              x_scaling_on = !x_scaling_on;
+              d3.select("#scale_x_row_button").style("color",x_scaling_on ? "black":"#d3d3d3");
+            });
+            var y_scaling_on = true;
+            $("#scale_y_row_button").click(function(btn){
+              y_scaling_on = !y_scaling_on;
+              d3.select("#scale_y_row_button").style("color",y_scaling_on ? "black":"#d3d3d3");
+            });
+            </script>
+          </td>
+          <td><div id="scale_x_row" style='display:none;'></div></td>
+        </tr>
+        <tr>
+          <td><span style='float:right'></span></td>
+          <td><div id="scale_y_row" style='display:none;'></div></td>
+        </tr>
+        <tr>
+            <td>Axis Ticks</td>
+            <td><div id="axis_number_of_ticks_slider"></div></td>
+            <script>
+            document.addEventListener("drag", function( event ) {
+                update_all_anchor_lines();
+            }, false);
+            document.addEventListener("dragend", function( event ) {
+                update_all_anchor_lines();
+            }, false);
+            document.addEventListener("dragleave", function( event ) {
+                update_all_anchor_lines();
+            }, false);
+            $("#axis_number_of_ticks_slider").slider({
+              min: 5,max: 20,value: 10,step: 1,
+              slide: function( event, ui ) {
+                const x = d3.axisBottom(graph_x).ticks(ui.value).tickValues(graph_x.ticks(ui.value).concat(graph_x.domain()));
+
+                d3.selectAll('#bottom_x_axis')
+                  .call(x.tickSize(-storyline_height).ticks(parseFloat(ui.value)));
+
+                d3.selectAll('#top_x_axis')
+                  .call(x.tickSize(0).ticks(parseFloat(ui.value)));
+
+                d3.selectAll('#top_x_axis').selectAll('.tick').selectAll('text').attr('transform','translate(10,' + (-40) +') rotate(-45)');
+                d3.selectAll('#bottom_x_axis').selectAll('.tick').selectAll('text').attr('transform','translate(10,'+ (40) +') rotate(-45)');
+
+                // set_axis_style($("input[name='Axis_style']:checked").val());
+                translate_ticks();
+//                 console.log("#axis_number_of_ticks_slider set to " + ui.value);
+              }
+            }).slider("float");
+            </script>
+        </tr>
+
+<!--         <tr>
+          <td>Normalize Lenses</td>
+          <td>
+            <input class="globalize-input" type="checkbox" name="Global-Normalization" value="Global">
+          </td>
+          <script>
+            $(".globalize-input:checkbox").mSwitch({
+              onRendered: function(){},
+              onRender: function(elem){},
+              onTurnOn: function(elem){
+                set_lenses_global();
+                // global_trend.setLocal();
+                // global_outlier.setLocal();
+                return true;
+              },
+              onTurnOff: function(elem){
+                // this.checked = true;
+                set_lenses_local();
+                // global_trend.setGlobal();
+                // global_outlier.setGlobal();
+              }
+            });
+
+          </script>
+        </tr> -->
+        <tr>
+            <td colspan='3'>
+              <a style="float:right;" id="clear_lens_link">Clear All Lenses</a>
+              <script>
+                $("#clear_lens_link").on("click",function() { clear_lenses(); });
+              </script>
+            </td>
+        </tr>
+        <!-- <tr>
+            <td colspan='3'>
+              <a style="float:right;" id="reset_chart_options_link">Reset Basic Chart Styles</a></td>
+              <script>
+                $("#reset_chart_options_link").on("click",function() { reset_settings(); });
+              </script>
+        </tr> -->
+      </table>
+    </div> <!-- end chart_options_div -->
+
+    <script>
+      // handlers for the Chart Options div
+//       $("#filter_options_bar").click(function() {
+//         $("#filter_options_div").slideToggle("slow");
+//       });
+      $("#event_list_bar").click(function() {
+        $("#event_list_div").slideToggle("slow");
+      });
+      $("#chart_options_bar").click(function() {
+        $("#chart_options_div").slideToggle("slow");
+      });
+      $("#dataset_dropdown").on("change",function() {
+        console.log('#dataset_dropdown value changed to ' + $("#dataset_dropdown").val());
+        d3.selectAll(".analysis_view_div").remove();
+        d3.selectAll(".anchor_line").remove();
+        d3.select("#entities_table").remove();
+        document.getElementById("entities_table_wrapper").innerHTML = "<table id='entities_table'><thead><tr><th>Name</th><th>Select</th></tr></thead><tbody><!-- this table conntent is added in main.js:loadEntities() --></tbody></table>";
+
+        d3.select("#groups_table").transition().remove();
+        document.getElementById("groups_table_wrapper").innerHTML = "<table id='groups_table'><thead><tr><th>Name</th><th>Select</th></tr></thead><tbody><!-- this table conntent is added in main.js:loadEntities() --></tbody></table>";
+
+        d3.select("#main_view_svg").style("opacity","0").remove();
+        change_analysis_mode("Storyline_mode");
+//         $("#filter_options_div").empty();
+
+        go();
+      });
+
+      //Handler for analysis mode interactions
+      $(".mode_icons").click(function(){
+        //alert(this.id);
+        change_analysis_mode(this.id); // written in analysis_modes.js
+      })
+
+      $('#Storyline_mode').balloon({ minLifetime: 0, position:"bottom", css: {fontSize: "10px"}});
+      $('#Group_mode').balloon({ minLifetime: 0, position:"bottom", css: {fontSize: "10px"} });
+      $('#Trend_mode').balloon({ minLifetime: 0, position:"bottom", css: {fontSize: "10px"} });
+      $('#Line_mode').balloon({ minLifetime: 0, position:"bottom", css: {fontSize: "10px"} });
+      $('#Outlier_mode').balloon({ minLifetime: 0, position:"bottom", css: {fontSize: "10px"} });
+      $('#Context_mode').balloon({ minLifetime: 0, position:"bottom", css: {fontSize: "10px"} });
+
+      function clear_lenses(){
+        d3.selectAll(".analysis_view_div").remove();
+        d3.selectAll(".anchor_line").remove();
+        d3.selectAll(".timestep_marker").remove();
+        remove_timestep_range_selection();
+        change_analysis_mode("Storyline_mode");
+//         $("#filter_options_div").empty();
+        num_lenses = 0;
+        lense_lst.forEach(function(lens){
+          lens.deleted = true;
+        })
+      }
+
+    </script>
+
+    <span style='margin-top:10px' id='entities_options_bar' class='sidebar_title'>Entities <span class="glyphicon glyphicon-align-justify"></span></span>
+    <div id='entities_options_div' class='sidebar_options_div'>
+      <table class='sidebar_options_table2'>
+        <tr style='width:100px;'>
+          <td>Thickness:&nbsp;&nbsp;</td>
+          <td>
+              <div id="line_thickness_slider"></div>
+              <script>
+                $("#line_thickness_slider").slider({
+                  min: 1,max: 4,value: 2,step: 1,
+                  slide: function( event, ui ) {
+                   toggleAllStorylineThickness(parseFloat(ui.value));
+                  }
+                }).slider("float");
+              </script>
+          </td>
+        </tr>
+        <tr>
+          <td>Opacity:&nbsp;&nbsp;</td>
+          <td>
+              <div id="line_opacity_slider"></div>
+              <script>
+                $("#line_opacity_slider").slider({
+                    min: 0,max: 1,value: 1,step: 0.01,
+                    slide: function( event, ui ) {
+                      fade_storyline_line(parseFloat(ui.value));
+                    }
+                }).slider("float");
+              </script>
+          </td>
+        </tr>
+        <tr style='width:100px;'>
+          <td>Toggle Labels</td>
+          <td>
+
+            <input type="checkbox" class="label-toggle" style="margin-left:3.5em;" checked>
+            <script>
+              $(".label-toggle").change(function(){
+                if($(this).prop("checked")==false){
+                  d3.selectAll(".start").style("opacity",0);
+                  d3.selectAll(".end").style("opacity",0);
+                }
+                else{
+                  d3.selectAll(".start").style("opacity",default_chart_styles.label_opacity);
+                  d3.selectAll(".end").style("opacity",default_chart_styles.label_opacity);
+                }
+              })
+            </script>
+          </td>
+        </tr>
+      </table>
+      <table id="entities_table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Select</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- this table conntent is added in main.js:loadEntities() -->
+        </tbody>
+      </table>
+    </div>
+    <script>
+      $("#entities_options_bar").click(function() {
+        $("#entities_options_div").slideToggle("slow");
+      });
+    </script>
+
+    <span style='margin-top:10px' id='groups_options_bar' class='sidebar_title'>Groups <span class="glyphicon glyphicon-align-justify"></span></span>
+    <div id='groups_options_div' class='sidebar_options_div'>
+      <table class='sidebar_options_table2'>
+      <tr>
+          <td>Opacity:&nbsp;&nbsp;</td>
+          <td><div id="group_opacity_slider"></div></td>
+          <script>
+            $("#group_opacity_slider").slider({
+              min: 0,max: 1,value: 0.5,step: 0.01,
+              slide: function( event, ui ) {
+                fade_groups(parseFloat(ui.value));
+              }
+            }).slider("float");
+          </script>
+        </tr>
+      </table>
+      <table id="groups_table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Select</th>
+<!--             <th>Color</th> -->
+          </tr>
+        </thead>
+        <tbody>
+          <!-- this table conntent is added in main.js:loadEntities() -->
+        </tbody>
+      </table>
+    </div>
+    <script>
+      $("#groups_options_bar").click(function() {
+        $("#groups_options_div").slideToggle("slow");
+      });
+    </script>
+
+
+
+  </div> <!-- sidebar div -->
+
+  <div id='main_content'>
+      <!-- storyline SVG added here -->
+  </div>
+
+</body>
+
+</html>
