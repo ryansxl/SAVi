@@ -482,7 +482,7 @@ class Egoline{
      let groups_visited_by_egoline = [];
 
      const egoline_d = data.filter(function(d){
-       return d.character == clicked_line && d.timestep_start >= d0 && d.timestep_stop >= d0;
+       return d.character == clicked_line && d.timestep_start >= d0 && d.timestep_stop <= d1;
      });
 
      egoline_d.forEach(function(d){
@@ -661,8 +661,7 @@ class Egoline{
        .attr("y", 50)
        .attr("height", 15)
        .attr("fill", function(d){
-         const DT_id = "#"+d.group+"_DT_row";
-         return rgb2hex(d3.select(DT_id).select(".minicolors-swatch-color").style("background-color"));
+         return groupcolors[d.group];
        })
        .attr("rx",3)
        .attr("ry",3)
@@ -676,8 +675,7 @@ class Egoline{
        })
        .style('opacity','0.7')
        .style('stroke',function(d){
-         const DT_id = "#"+d.group+"_DT_row";
-         return darken(rgb2hex(d3.select(DT_id).select(".minicolors-swatch-color").style("background-color")));
+          return groupcolors[d.group];
        })
        .style('stroke-width', "2.0px");
 
@@ -688,7 +686,7 @@ class Egoline{
         .attr("x", function(d) { return _x(+d.timestep_start) + _this.margin.left; })
         .attr("y", 40)
         .style("fill",function(d){
-          return rgb2hex(d3.select("#"+d.group+"_DT_row").select(".minicolors-swatch-color").style("background-color"));
+           return groupcolors[d.group];
         })
         .on("mouseover",function(d){
             svg.selectAll(".scarf-plot-label").style("opacity","0");
@@ -790,7 +788,7 @@ class Egoline{
            fade_line(null,0.7);
            _lense_label.text(lense.placeholder_text);
          })
-         .style("stroke", function(d){ return _this._get_line_clr(d.character);})
+         .style("stroke", "#d3d3d3")
          .style("stroke-width", "4px");
 
        egoline_svg.append("g")
@@ -875,16 +873,17 @@ class Egoline{
       //      .raise();
 
         _svg.append("text")
-          .attr("x",70)
+          .attr("x",45)
           .attr("y",function(d){
             return _h + 4;
           })
           .style("font-size", "12px")
           .text("Analyzing entities that interact with: ")
+          .style("fill","#d3d3d3")
 
        _svg.append("text")
            .attr("class", "ego-text")
-           .attr("x",260)
+           .attr("x",240)
            .attr("y",function(d){
              return _h + 2;
            })
@@ -901,12 +900,12 @@ class Egoline{
              on_mouseout_entity();
              _lense_label.text(lense.placeholder_text);
            })
-           .style("fill", this._get_line_clr(_this.ego))
+           .style("fill", "#d3d3d3")
            .style("font-size", "12px")
            .text(function(){
              // if(_this.ego.length > 5)
              //  return _this.ego.slice(0,5) + "...";
-            return '"' + _this.ego + '"';
+            return "  " + _this.ego + "";
            });
 
            /*
