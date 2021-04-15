@@ -138,24 +138,38 @@ ContextLegend.prototype.addCells = function(svg){
 
 class Trend{
 
-  constructor(svg){
+  constructor(svg,selected_range){
     this.lens_num = svg.attr("id").replace("analysis_view_","");
     this.div = d3.select("#analysis_view_div_"+this.lens_num);
     this.svg = svg;
+    this.state = "A";
+    this.selected_range = selected_range;
     
-    var statOptions = {
-    "All Changes": "A",
-    "Group Changes": "G",
-    "Lines Entering": "ET",
-    "Lines Exiting": "EX"
-    };
+//     var statOptions = {
+//     "All Changes": "A",
+//     "Group Changes": "G",
+//     "Lines Entering": "ET",
+//     "Lines Exiting": "EX",
+//     "Deviations And Crossovers": "DC"
+//     };
 
-    d3.select("#analysis_view_div_"+this.lens_num).append("form").attr("id","trend_form"+this.lens_num).style("width","20px").style("position","absolute").style("left","200px").style("top","39px");
-    var selectUI = d3.select("#trend_form"+this.lens_num).append("select");
-    selectUI.attr("id","trend_form_option"+this.lens_num);
+//     d3.select("#analysis_view_div_"+this.lens_num).append("form").attr("id","trend_form"+this.lens_num).style("width","20px").style("position","absolute").style("left","188px").style("top","39px");
+//     var selectUI = d3.select("#trend_form"+this.lens_num).append("select");
+//     selectUI.attr("id","trend_form_option"+this.lens_num);
 
-    selectUI.selectAll("option").data(d3.keys(statOptions)).enter().append("option").text(function(d) {return d;});
-    selectUI.selectAll("option").data(d3.values(statOptions)).attr("value", function(d) {return d;});
+//     selectUI.selectAll("option").data(d3.keys(statOptions)).enter().append("option").text(function(d) {return d;});
+//     selectUI.selectAll("option").data(d3.values(statOptions)).attr("value", function(d) {return d;});
+
+//     d3.select("#trend_form_option"+this.lens_num)
+//       .on("change",function(){
+//         this.state = this.value;
+//         console.log("changing1111111111"+this.state);
+//         //show_trend_detection(svg,selected_range.start,selected_range.stop,lense.height[this.type],lense.width[this.type]);
+//       })
+  }
+
+  setstate(value){
+    this.state = value;
   }
 
 
@@ -204,6 +218,7 @@ class Trend{
     let data=[], pt={};
     let dataenter = [], infoenter = {};
     let dataexit = [], infoexit = {};
+    let datapos = [], infopos ={};
     for (let i = timestep_start; i <= timestep_stop; i++) {
       pt.x = i;
       pt.intensity = this.get_heatmap_value(i,entity_activity_data);
@@ -219,11 +234,39 @@ class Trend{
       infoexit.intensity = this.get_heatmap_value_exiting(i);
       dataexit.push(infoexit);
       infoexit = {};
+
+      infopos.x = i;
+      infopos.intensity = this.get_heatmap_value_changingposition(i);
+      datapos.push(infopos);
+      infopos = {};
     }
-    console.log(data);
+//     console.log(data);
     console.log(dataexit);
-    console.log(dataenter);
-    return data;
+//     console.log(dataenter);
+    console.log(datapos);
+
+    let datagroup = [], infogroup ={};
+    for(let i = timestep_start; i <= timestep_stop; i++){
+
+      infogroup.x = i;
+      infogroup.intensity = Math.max(0,data[i-timestep_start].intensity - dataexit[i-timestep_start].intensity - dataenter[i-timestep_start].intensity);
+      datagroup.push(infogroup);
+      infogroup = {};
+    }
+
+//     console.log(datagroup);
+
+    if(this.state === "A"){
+      return data;
+    }else if(this.state === "G"){
+      return datagroup;
+    }else if(this.state === "ET"){
+      return dataenter;
+    }else if(this.state === "EX"){
+      return dataexit;
+    }else{
+      return datapos;
+    }
 
     function get_entity_y_value(character,x){
       let y = 0;
@@ -287,6 +330,27 @@ class Trend{
 
   }
 
+   get_heatmap_value_changingposition(timestep){
+
+    var res = 0;
+    _storyline_data.forEach(function(d){
+      if(timestep === 0){
+        return 0;
+      }else{ 
+        var lasttime = timestep-1;
+        //console.log(d[timestep] +"   " + d[lasttime])
+        if((!Number.isNaN(d[timestep]) && typeof(d[timestep]) != "undefined") && (!Number.isNaN(d[lasttime]) &&  typeof(d[lasttime]) != "undefined")){
+          if(d[timestep] != d[lasttime]){
+            res+=1;
+          }
+        }
+        //console.log('exit',timestep,typeof(d),d.name,d[timestep],d[lasttime],res);
+      }
+    })
+    return res;
+
+  }
+
   create_heatmap(svg,data,timestep_start,timestep_stop,h,w){
     svg.select('.trend_x_axis').remove();
     svg.selectAll('.cell').remove();
@@ -329,6 +393,7 @@ class Trend{
         .attr('width', (w-20)/(timestep_stop-timestep_start+1) - 2 * delta_width)
         .attr('height', function(d){
           if(d.intensity == 0) return h-10;
+          console.log(d.x+" .  "+d.intensity);
           return (h-30)*d.intensity/d3.max(color_palette);
           })
         .attr('y', function(d) {
@@ -383,7 +448,7 @@ class Trend{
     
 
     const lens_num = svg.attr("id").replace("analysis_view_","");
-    const legend_container = d3.select("#" + 'analysis_view_div_'+lens_num).append("div").attr("class","legend-container").attr("id","legend-container_"+lens_num).style("width","40%").style("left","350px"); 
+    const legend_container = d3.select("#" + 'analysis_view_div_'+lens_num).append("div").attr("class","legend-container").attr("id","legend-container_"+lens_num).style("width","40%").style("left","395px"); 
     new Legend(legend_container,color_palette,this.local_scale,lens_num);
     this.color_palette = color_palette;
 

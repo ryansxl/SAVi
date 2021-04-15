@@ -413,7 +413,7 @@ class Group {
       this.bar_axis.y = g.append("g")
           .attr("class", "stack_bar_graph_axis")
           .attr("transform", "translate(3," + padding.top + ")")
-          .call(d3.axisLeft(y).ticks(3));
+          .call(d3.axisLeft(y).ticks(Math.min(this.getMaxMin(data,group_name,stack)[1] - this.getMaxMin(data,group_name,stack)[0],4)));
 
       const entering_label = g.append("text")
         .attr("y", 10)

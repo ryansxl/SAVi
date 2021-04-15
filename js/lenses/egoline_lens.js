@@ -625,7 +625,18 @@ class Egoline{
      .attr("transform","translate(70,20)")
      .style("fill","#d3d3d3")
      .style("font-size","11px")
-     .text("Groups "+'"'+_this.ego+'"'+" visits in "+_this.range.start+"-"+_this.range.stop+".");
+     .text("- - Groups "+'"'+_this.ego+'"'+" visits in "+_this.range.start+" to "+_this.range.stop+" - -");
+
+
+    svg
+     .append("text")
+     .attr("x",0)
+     .attr("y",0)
+     .attr("dy", "0em")
+     .attr("transform","translate(0,20)")
+     .style("fill","#d3d3d3")
+     .style("font-size","14px")
+     .text("Groups");
 
     //  svg
     //   .append("text")
@@ -655,8 +666,14 @@ class Egoline{
        .attr("class", function(d){return "scarf-plot "+d.group;})
        .attr("x", function(d) { return _x(+d.timestep_start) + _this.margin.left; })
        .attr("width", function(d) {
-         if(_x(+d.timestep_stop) - _x(+d.timestep_start) <= 0) return 0;
-         return _x(+d.timestep_stop) - _x(+d.timestep_start);
+         if(_x(+d.timestep_stop) - _x(+d.timestep_start) < 0) return 0;
+         if(d.timestep_start === _this.range.stop){
+           return 0;
+         }
+         if(d.timestep_stop === _this.range.stop){
+           return _x(+d.timestep_stop) - _x(+d.timestep_start) - 3;
+         }
+         return _x(+d.timestep_stop+1) - _x(+d.timestep_start) - 3;
        })
        .attr("y", 50)
        .attr("height", 15)
@@ -710,7 +727,7 @@ class Egoline{
            d3.select(this).style("font-size","8px");
            const px_len = +d.timestep_stop - +d.timestep_start;
 
-           if(px_len == 0) return "";
+           if(px_len == 0) return  d.group.slice(0,1) + "..";
            if(d.group.length > px_len) return d.group.slice(0,px_len) + "..";
 
            return d.group;
@@ -756,7 +773,7 @@ class Egoline{
      .attr("x",0)
      .attr("y",45)
      .style("fill","#d3d3d3")
-     .style("font-size","11px")
+     .style("font-size","14px")
      .text("Entities");
 
      egoline_svg
@@ -777,7 +794,14 @@ class Egoline{
          .attr("d", function(d) {
            let t;
            if(d.timestep_start == d.timestep_stop) t = [{x: parseFloat(d.timestep_start), y: parseFloat(d.order) - num_lines_removed}, {x: parseFloat(+d.timestep_stop+1), y: parseFloat(d.order) - num_lines_removed}];
-           else t = [{x: parseFloat(d.timestep_start), y: parseFloat(d.order) - num_lines_removed}, {x: parseFloat(d.timestep_stop), y: parseFloat(d.order) - num_lines_removed}];
+           else t = [{x: parseFloat(d.timestep_start), y: parseFloat(d.order) - num_lines_removed}, {x: parseFloat(d.timestep_stop+1), y: parseFloat(d.order) - num_lines_removed}];
+           if(d.timestep_start === _this.range.stop){
+             t=[{x:0,y:0},{x:0,y:0}];
+             return line(t);
+           }
+           if(d.timestep_stop  === _this.range.stop){
+             t = [{x: parseFloat(d.timestep_start), y: parseFloat(d.order) - num_lines_removed}, {x: parseFloat(d.timestep_stop), y: parseFloat(d.order) - num_lines_removed}];
+           }
            return line(t);
          })
          .on("mouseover", function(d) {
@@ -785,7 +809,8 @@ class Egoline{
            _lense_label.text(d.character);
          })
          .on("mouseout", function(d) {
-           fade_line(null,0.7);
+          fade_line(null,0.65);
+          d3.select("#storylines_g_child").selectAll(".group").style("opacity",0.3);
            _lense_label.text(lense.placeholder_text);
          })
          .style("stroke", "#d3d3d3")
@@ -817,7 +842,8 @@ class Egoline{
              else{
                 d3.select(this).transition().text(d.character);
              }
-             fade_line(null,0.7);
+            fade_line(null,0.65);
+            d3.select("#storylines_g_child").selectAll(".group").style("opacity",0.3);
              _lense_label.text(lense.placeholder_text);
            })
            .style("fill", function(d){ return _this._get_line_clr(d.character);})
@@ -891,7 +917,8 @@ class Egoline{
            .on("mouseover",reveal_text)
            .on("mouseout", function() {
               // _svg.select("#egoline_ID").transition().attr("transform","translate(0)");
-              fade_line(null,0.7);
+            fade_line(null,0.65);
+            d3.select("#storylines_g_child").selectAll(".group").style("opacity",0.3);
               // if(_this.ego.length > 5)
               //     d3.select(this).transition().text(_this.ego.slice(0,5) + "...");
               // else{
@@ -900,7 +927,6 @@ class Egoline{
              on_mouseout_entity();
              _lense_label.text(lense.placeholder_text);
            })
-           .style("fill", "#d3d3d3")
            .style("font-size", "12px")
            .text(function(){
              // if(_this.ego.length > 5)

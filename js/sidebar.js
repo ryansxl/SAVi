@@ -698,14 +698,14 @@ function change_analysis_mode(mode){
 
  function on_mouseout_entity(){
    d3.selectAll(".selection").attr("fill-opacity",0.3);
-   fade_line(null,1);
-   fade_groups(0.5);
+   fade_line(null,0.65);
+   fade_groups(0.3);
  };
 
 function on_mouseover_group(id){
    d3.selectAll(".selection").attr("fill-opacity",0);
-   fade_group(id,0);
-   fade_storyline_entities(0.3);
+   fade_group(id,0.1);
+   fade_storyline_entities(0.1);
 
    // const DT_id = "#"+id+"_DT_row";
    // $(".dataTables_scrollBody").scrollTo(DT_id);
@@ -715,6 +715,6 @@ function on_mouseover_group(id){
  function on_mouseout_group(){
    // d3.select(DT_id).style("background-color","white");
    d3.selectAll(".selection").attr("fill-opacity",0.3);
-   fade_storyline_entities(1);
-   fade_groups(0.5);
+   fade_storyline_entities(0.65);
+   fade_groups(0.3);
  };

@@ -108,8 +108,13 @@ class LenseAxis{
       .style("position","absolute")
       .style("width",this.width+3+"px")
       .style("height",this.height+"px")
-      .style("bottom",this.bottom+"px")
       .style("left",this.left+"px");
+
+    if(this.type === "single line"){
+      div.style("top","120px");
+    }else{
+      div.style("bottom",this.bottom+"px");
+    }
 
     this.div = div;
     return div;
@@ -344,13 +349,43 @@ class Lense {
     this._set_attr();
     this.setActive(true);
 
+    var _this = this;
 
     if(this.type == "trend"){
-      this.trend = new Trend(this.view);
+      this.trend = new Trend(this.view,this.selected_range);
+
+      var statOptions = {
+      "All Changes": "A",
+      "Group Changes": "G",
+      "Lines Entering": "ET",
+      "Lines Exiting": "EX",
+      "Deviations And Crossovers": "DC"
+      };
+
+      d3.select("#analysis_view_div_"+this.lense_number).append("form").attr("id","trend_form"+this.lense_number).style("width","20px").style("position","absolute").style("left","188px").style("top","39px");
+      var selectUI = d3.select("#trend_form"+this.lense_number).append("select");
+      selectUI.attr("id","trend_form_option"+this.lense_number);
+
+      selectUI.selectAll("option").data(d3.keys(statOptions)).enter().append("option").text(function(d) {return d;});
+      selectUI.selectAll("option").data(d3.values(statOptions)).attr("value", function(d) {return d;});
+
+      d3.select("#trend_form_option"+this.lense_number)
+      .on("change",function(){
+        _this.trend.setstate(this.value);
+        //update_trend(this.value);
+        console.log(_this.trend.state+"changing1111111111" + this.value);
+        _this.trend.show_trend_detection(_this.trend.svg,_this.selected_range.start,_this.selected_range.stop,lense.height[_this.type],lense.width[_this.type]);
+      })
+
+//       function update_trend(value){
+//         this.trend.setstate(value);
+//         return;
+//       }
+
     }
     if(this.type == "single line"){
       d3.select("#analysis_view_div_"+this.lense_number).add_range_annotations_mouseover(this.lense_number);
-      this.freq = this._set_as_egoline();
+      //this.freq = this._set_as_egoline();
     }
     if(this.type == "group"){
       this.group_lens = new Group();
@@ -595,7 +630,7 @@ class Lense {
     else if(this.type == "single line"){
       const div = d3.select("#analysis_view_div_"+n);
       const d = create_egoline_graph(n,this.character,d3.select("#analysis_view_"+n).select('svg'), $.extend(true, [], _bubbleset_data),bar_x,clicked_line_1,parseFloat(div.select('.chart-div').style("height")),$('#analysis_view_div_'+n).width()-20,d0,d1);
-      this.freq.onResize(parseFloat(document.getElementById('analysis_view_div_'+n).style.width)-20,d);
+      //this.freq.onResize(parseFloat(document.getElementById('analysis_view_div_'+n).style.width)-20,d);
     }
   };
 
@@ -801,13 +836,15 @@ class Lense {
        let scarf_plot_container = background.append("div")
             .attr("class","scarf_plot_container")
             .style('width', function(){ return lense.width[analysis_type] + 'px'; })
+            .style('top',"60px")
+            .style("height","80px")
             .append("svg")
             .attr("id","scarf_plot_"+lense_number)
             .style('width', function(){ return lense.width[analysis_type] + 'px'; });
 
        var div = background.append('div')
            .attr("class","chart-div")
-           .style("top","190px")
+           .style("top","120px")
            .style('width', function(){ return lense.width[analysis_type] + 'px'; })
            .style('height', String($('#analysis_view_div_'+this.lense_number).height() - 230) + 'px');
      }
@@ -869,8 +906,8 @@ class Lense {
 
         case "single line":
           const d = create_single_line_analysis_view(this.lense_number,view,this.character,this.selected_range.start,this.selected_range.stop,parseFloat(d3.select("#analysis_view_div_"+this.lense_number).select(".chart-div").style("height")));
-          this.freq.setWidth($('#analysis_view_div_'+this.lense_number).width()-20);
-          this.freq.render(d);
+          //this.freq.setWidth($('#analysis_view_div_'+this.lense_number).width()-20);
+          //this.freq.render(d);
           break;
 
         case "outlier":
@@ -996,14 +1033,14 @@ class Lense {
                     update_anchor_lines(lense_number);
                     transform_lense_labels('#analysis_view_div_'+lense_number,$(this));
                     const d = create_egoline_graph(lense_number,character,d3.select("#analysis_view_"+lense_number).select('svg'), $.extend(true, [], _bubbleset_data),bar_x,clicked_line_1,parseFloat(div.select('.chart-div').style("height")),$('#analysis_view_div_'+lense_number).width()-20,d0,d1);
-                    freq.setRange(_this.selected_range).onResize(parseFloat(document.getElementById('analysis_view_div_'+lense_number).style.width)-20,d);
+                    //freq.setRange(_this.selected_range).onResize(parseFloat(document.getElementById('analysis_view_div_'+lense_number).style.width)-20,d);
                   },
         stop:   function(){
                 let d0 = _this.selected_range.start,
                     d1 = _this.selected_range.stop;
 
                   const d = create_egoline_graph(lense_number,character,d3.select("#analysis_view_"+lense_number).select('svg'), $.extend(true, [], _bubbleset_data),bar_x,clicked_line_1,parseFloat(div.select('.chart-div').style("height")),$('#analysis_view_div_'+lense_number).width()-20,d0,d1);
-                  freq.setRange(_this.selected_range).onResize(parseFloat(document.getElementById('analysis_view_div_'+lense_number).style.width)-20,d);
+                  //freq.setRange(_this.selected_range).onResize(parseFloat(document.getElementById('analysis_view_div_'+lense_number).style.width)-20,d);
                   d3.selectAll(".temp-view").remove();
 
                   update_anchor_lines(lense_number);
@@ -1173,7 +1210,7 @@ class Lense {
       }
       else if(_type == "single line"){
         const d = create_egoline_graph(n,_this.character,d3.select("#analysis_view_"+n).select('svg'), $.extend(true, [], _bubbleset_data),bar_x,clicked_line_1,parseFloat(d3.select("#analysis_view_div_"+n).select(".chart-div").style("height")),_w,d0,d1);
-        _this.freq.setRange({start:d0,stop:d1}).onResize(_w,d);
+        //_this.freq.setRange({start:d0,stop:d1}).onResize(_w,d);
         d3.selectAll(".temp-view").remove();
       }
       update_all_anchor_lines();
@@ -2559,7 +2596,10 @@ function add_2d_timestep_range_selection(){
 
 function remove_timestep_range_selection(){
   d3.selectAll('.select_brush').transition().remove();
-  if(line_mode_active) fade_line(null,1);
+  if(line_mode_active) {
+    fade_line(null,0.65);
+    d3.select("#storylines_g_child").selectAll(".group").style("opacity",0.3);
+    }
   if(group_mode_active){
     d3.selectAll(".group").style("opacity",1);
   }
