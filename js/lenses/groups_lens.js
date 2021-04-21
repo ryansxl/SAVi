@@ -328,7 +328,7 @@ class Group {
 
     const bar = g.selectAll(".bar").data(new_data), stack = d3.stack().keys(characters).offset(d3.stackOffsetDiverging);
     let x = d3.scaleLinear().domain([d0,d1]).range([3,w-20]),
-        y = d3.scaleLinear().domain([this.getMaxMin(data,group_name,stack)[0],this.getMaxMin(data,group_name,stack)[1]]).range([h*1.5,0]);
+        y = d3.scaleLinear().domain([this.getMaxMin(data,group_name,stack)[0],this.getMaxMin(data,group_name,stack)[1]]).range([h*1,0]);
 
     this.bar_height = h,
     this.local.bar.x = x,
@@ -391,6 +391,7 @@ class Group {
           if((w/d1-d0) > min_width && Math.abs(w/d1-d0) > 0) return (w/d1-d0);
           return min_width;
         })
+        .attr("fill", function(d) { return "#d3d3d3"; })
         .on("mouseover",function(d,i){
           // console.log(d);
           mouseover_rect(i);

@@ -203,7 +203,7 @@ class TimestepSignature{
           _y = this.initial.position.y,
           _id = this.id;
 
-    const _storylines_g_child = d3.select("#storyline_svgID");
+    const _storylines_g_child = d3.select("#storylines_g_child");
 
     this.marker = _storylines_g_child.append("svg").append('rect');
 
@@ -295,7 +295,7 @@ class TimestepSignature2D{
           _y = this.position.unscaled.y.min,
           _id = this.id;
 
-    const _storylines_g_child = d3.select("#storyline_svgID");
+    const _storylines_g_child = d3.select("#storylines_g_child");
 
     this.marker = _storylines_g_child.append('rect');
 
@@ -309,7 +309,7 @@ class TimestepSignature2D{
         .attr('fill',d3.select('.selection').attr('fill'))
         .attr('fill-opacity', 0.3)
         .attr('stroke',d3.select('.selection').attr('stroke'))
-        .attr("transform", "translate(" + (0) + "," + (storylines_g_margin.bottom + (default_chart_styles.spacing_y) - storyline_height) + ")")
+        .attr("transform", "translate(" + (0) + "," + 0 + ")")
   };
 
   transform(){
@@ -1461,7 +1461,7 @@ class OnChartLense {
    };
 
    reload_lens(){
-      this.context.data = this.load_data();
+      this.context.data = this.get_data();
       this.update_context_view();
    };
 
@@ -1579,8 +1579,8 @@ class OnChartLense {
           _pts = _this.pts,
           padding = _this.padding;
 
-    const x = context.scales.x.range([0,parseFloat(_this.div.style("width"))]),
-          y = context.scales.y.range([parseFloat(_this.div.style("height")),padding.top]);
+    const x = context.scales.x.range([30,parseFloat(_this.div.style("width"))- 30]),
+          y = context.scales.y.range([parseFloat(_this.div.style("height"))- 85 ,padding.top]);
 
     const width   = parseFloat(_this.div.style("width")),
           height  = parseFloat(_this.div.style("height"))-padding.top;
@@ -1588,6 +1588,7 @@ class OnChartLense {
     let color_lst = [];
 
     this.svg.style("height",height);
+    const newdata = _this.get_data();
 
     context.path
       .selectAll("path")
@@ -1597,20 +1598,118 @@ class OnChartLense {
           .y(function(d) { return y(d.y); })
           .size([width, height])
           .bandwidth(10)
-        (context.data))
+        (newdata))
       .enter().append("path")
         .attr("fill", function(d) {
           color_lst.push(d.value);
           return context.color(d.value);
         })
         .attr("d", d3.geoPath())
-        .attr("transform","translate(0,"+padding.top+")");
+        .attr("transform","translate(0,"+20+")");
 
         /*
         Adding legend here.
          */
         new ContextLegend(this.svg,color_lst,context.color,_this.lense_number);
   };
+
+
+  get_data(){
+
+    const _this = this;
+
+    const _x = graph_x,
+          _y = graph_y,
+          _pts = _this.pts;
+
+    // The corners of the timestep signature -- they are based on timestep, not the pixel length
+    // If you want to access the pixel length, then simply access without the _x.invert e.g. pts.x.min
+    //
+    // The corners of the timestep signature -- they are based on timestep, not the pixel length
+    // If you want to access the pixel length, then simply access without the _x.invert e.g. pts.x.min
+    const selection = {
+      x:{
+        max:Math.round(_x.invert(_pts.x.max)),
+        min:Math.round(_x.invert(_pts.x.min))
+      },
+      y:{
+        max:Math.round(_y.invert(_pts.y.min)),
+        min:Math.round(_y.invert(_pts.y.max))
+      }
+    };
+
+    this.selection = selection;
+
+    var result = [];
+
+    _storyline_data.forEach(function(d,index){
+      var lasty = NaN;
+
+      for(let i = selection.x.min ; i < selection.x.max; i++){
+
+          if(lasty != NaN && lasty != undefined && d[i] != NaN && d[i] != undefined && d[i] != lasty){
+              
+              var info = {};
+
+              if(d[i]<=selection.y.max && d[i] >= selection.y.min && lasty <= selection.y.max && lasty >= selection.y.min){
+                
+                info.x = i - 0.5;
+                info.y = (d[i] + lasty) / 2;
+                result.push(info);
+
+              }else if(d[i]> selection.y.max && lasty <= selection.y.max && lasty >= selection.y.min){
+                
+                info.x = i - 0.5;
+                info.y = (selection.y.max + lasty) / 2;
+                result.push(info);
+
+              }else if(d[i] < selection.y.min && lasty <= selection.y.max && lasty >= selection.y.min){
+
+                info.x = i - 0.5;
+                info.y = (selection.y.min + lasty) / 2;
+                result.push(info);
+
+              }else if(d[i]<=selection.y.max && d[i] >= selection.y.min && lasty > selection.y.max){
+
+                info.x = i - 0.5;
+                info.y = (selection.y.max + d[i]) / 2;
+                result.push(info);
+
+              }else if(d[i]<=selection.y.max && d[i] >= selection.y.min && lasty < selection.y.min){
+
+                info.x = i - 0.5;
+                info.y = (selection.y.min + d[i]) / 2;
+                result.push(info);
+
+              }else if(d[i] < selection.y.min && lasty > selection.y.max){
+
+                info.x = i - 0.5;
+                info.y = (selection.y.min + selection.y.max) / 2;
+                result.push(info);
+
+              }else if(lasty < selection.y.min && d[i] > selection.y.max){
+
+                info.x = i - 0.5;
+                info.y = (selection.y.min + selection.y.max) / 2;
+                result.push(info);    
+                            
+              }
+
+          }
+          lasty = d[i];
+
+          if(d[i]<=selection.y.max && d[i] >= selection.y.min){
+            var info = {};
+            info.x = i;
+            info.y = d[i];
+            result.push(info);
+          }
+      }
+    })
+
+    return result;
+
+  }
 
   load_data(){
     // Some globals you might find useful
@@ -1726,17 +1825,18 @@ class OnChartLense {
     this.selection = selection;
 
     //create x-y scales
-    const x = d3.scaleLinear().domain([+selection.x.min,+selection.x.max]).range([0,parseFloat(_this.div.style("width"))]),
-          y = d3.scaleLinear().domain([+selection.y.min,+selection.y.max]).range([parseFloat(_this.div.style("height")),padding.top]);
+    const x = d3.scaleLinear().domain([+selection.x.min,+selection.x.max]).range([30,parseFloat(_this.div.style("width"))- 30]),
+          y = d3.scaleLinear().domain([+selection.y.min,+selection.y.max]).range([parseFloat(_this.div.style("height"))- 85 ,padding.top]);
 
     const data = _this.load_data();
+    const newdata = _this.get_data();
 
     const width  = parseFloat(_this.div.style("width")),
-          height = parseFloat(_this.div.style("height")) - padding.top;
+          height = parseFloat(_this.div.style("height"));
 
     //Create Contour Plot
     const color = d3.scaleSequential(d3.interpolateOranges)
-        .domain([0, 0.02]); // Points per square pixel.
+        .domain([0, 0.04]); // Points per square pixel.
 
     let color_lst = [];
 
@@ -1744,7 +1844,9 @@ class OnChartLense {
         .attr("fill", "none")
         .attr("stroke", "#000")
         .attr("stroke-width", 0.5)
-        .attr("stroke-linejoin", "round");
+        .attr("stroke-linejoin", "round")
+//         .style('width',width + 'px')
+//         .style('height', height + 'px');
 
     path
       .selectAll("path")
@@ -1753,14 +1855,14 @@ class OnChartLense {
           .y(function(d) { return y(d.y); })
           .size([width, height])
           .bandwidth(10)
-        (data))
+        (newdata))
       .enter().append("path")
         .attr("fill", function(d) {
           color_lst.push(d.value);
           return color(d.value);
         })
         .attr("d", d3.geoPath())
-        .attr("transform","translate(0,"+padding.top+")");;
+        .attr("transform","translate(0,"+ 20 +")");;
 
     /*
     Adding legend here.
@@ -1790,7 +1892,9 @@ class OnChartLense {
             w = parseFloat(_this.div.style("width"));
 
       const focus = svg.append('g')
-                       .attr("class","focus");
+                       .attr("class","focus")
+                       .style("width","100%")
+                       .style("height","100%");
 
       const line_x = focus.append("line")
         // .style("stroke-width",w/100)
@@ -1819,8 +1923,8 @@ class OnChartLense {
       _this.lens_line_y = line_y;
 
       const arc = d3.arc()
-          .innerRadius(25)
-          .outerRadius(28)
+          .innerRadius(12)
+          .outerRadius(15)
           .startAngle(45 * (Math.PI/180)) //converting from degs to radians
           .endAngle(10) //just radians
 
@@ -1837,22 +1941,24 @@ class OnChartLense {
       focus.style("display", "none");
 
       svg.selectAll("*").on("mouseover",function(){
-        const x_scale = d3.scaleLinear().domain([+selection.x.min,+selection.x.max]).range([0,parseFloat(_this.div.style("width"))]),
-              y_scale = d3.scaleLinear().domain([+selection.y.min,+selection.y.max]).range([parseFloat(_this.div.style("height")),0]);
+        const x_scale = d3.scaleLinear().domain([+selection.x.min,+selection.x.max]).range([30,parseFloat(_this.div.style("width"))- 30]),
+              y_scale = d3.scaleLinear().domain([+selection.y.min,+selection.y.max]).range([parseFloat(_this.div.style("height"))- 85 ,padding.top]);
 
         const x0 = Math.round(x_scale.invert(d3.mouse(this)[0])),
               y0 = Math.round(y_scale.invert(d3.mouse(this)[1]));
 
+        //console.log(d3.mouse(this)[0]+","+d3.mouse(this)[1])
+
         line_x
           .attr("y2",parseFloat(_this.div.style("height")))
-          .attr("transform", "translate(" + x_scale(x0) + ",0)");
+          .attr("transform", "translate(" + d3.mouse(this)[0] + ",0)");
 
         line_y
           .attr("x2",parseFloat(_this.div.style("width")))
-          .attr("transform", "translate(0," + y_scale(y0) + ")");
+          .attr("transform", "translate(0," + d3.mouse(this)[1] + ")");
 
         crosshair
-          .attr("transform", "translate(" + x_scale(x0) + "," + y_scale(y0) + ")")
+          .attr("transform", "translate(" + d3.mouse(this)[0] + "," + d3.mouse(this)[1] + ")")
           .attr("r",parseFloat(_this.div.style("width"))/25);
 
         _this.mouseover_onchart_crosshair(x0,y0);
@@ -1864,7 +1970,6 @@ class OnChartLense {
           if(lens instanceof OnChartLense) lens.lens_mouseover(x0,y0);
           else lens.show_timesteps(x0,0);
         });
-        console.log("halloooo");
       })
       .on("mouseout",function(){
         _this.lens_mouseout();
@@ -1911,8 +2016,8 @@ class OnChartLense {
     this.focus = focus;
 
     const arc = d3.arc()
-        .innerRadius(50)
-        .outerRadius(70)
+        .innerRadius(20)
+        .outerRadius(30)
         .startAngle(45 * (Math.PI/180)) //converting from degs to radians
         .endAngle(10) //just radians
 
@@ -2502,7 +2607,7 @@ function add_2d_timestep_range_selection(){
 
    svg.append("g")
      .attr("class", "select_brush")
-     .attr("transform", "translate(" + (0) + "," + (storylines_g_margin.bottom + (default_chart_styles.spacing_y) - storyline_height) + ")")
+     .attr("transform", "translate(" + (0) + ","+ 0 + ")")
      .call(brush);
 
    /*

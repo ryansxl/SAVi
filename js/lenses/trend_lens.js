@@ -79,7 +79,7 @@ let ContextLegend = function(el,data,scale,n) {
     this.element = el;
     this.scale = scale;
     this.lens_number = n;
-    this.element.append("text").style("font-size","11px").style("position","absolute").attr("y",20).text("Interactions:");
+    this.element.append("text").style("font-size","11px").style("position","absolute").attr("y",18).attr("x",3).text("Interactions:");
     this.draw();
 }
 

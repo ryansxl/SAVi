@@ -1,6 +1,5 @@
 function update_storyboard(view,analysis_type,name,d0,d1){
   storyboard_list.push(create_storyboard_object(analysis_type,name,d0,d1,null));
-  console.log('55555');
 
   // saveSvgAsPng(document.getElementById(view._groups[0][0].id), "diagram.png", {scale: 0.5});
   // var scale_value = get_image_scale_value(view);
