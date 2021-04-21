@@ -788,3 +788,29 @@ right: 162px;
 #entities_table_filter input{
 left:45px;
 }
+
+#map_graph_x_axis_ID line{
+  stroke: #ccc;
+  stroke-width: 1px;
+}
+#map_graph_x_axis_ID path{
+  stroke: #ccc;
+  stroke-width: 1px;
+}
+#map_graph_x_axis_ID  text{
+  fill: #ccc;
+  font-size: 8px;
+}
+
+#map_graph_y_axis_ID line{
+  stroke: #ccc;
+  stroke-width: 1px;
+}
+#map_graph_y_axis_ID path{
+  stroke: #ccc;
+  stroke-width: 1px;
+}
+#map_graph_y_axis_ID  text{
+  fill: #ccc;
+  font-size: 8px;
+}
