@@ -1622,7 +1622,7 @@ class OnChartLense {
           return context.color(d.value);
         })
         .attr("d", d3.geoPath())
-        .attr("transform","translate(10,"+15+")");
+        .attr("transform","translate(11,"+15+")");
 
         /*
         Adding legend here.
@@ -1881,7 +1881,7 @@ class OnChartLense {
           return color(d.value);
         })
         .attr("d", d3.geoPath())
-        .attr("transform","translate(10,"+ 15 +")");
+        .attr("transform","translate(11,"+ 15 +")");
 
     svg.append("g")
        .attr("class", "x_axis")
