@@ -79,7 +79,7 @@ let ContextLegend = function(el,data,scale,n) {
     this.element = el;
     this.scale = scale;
     this.lens_number = n;
-    this.element.append("text").style("font-size","11px").style("position","absolute").attr("y",18).attr("x",3).text("Interactions:");
+    this.element.append("text").style("font-size","11px").style("position","absolute").attr("y",18).attr("x",3).text("Density Level:");
     this.draw();
 }
 
@@ -118,7 +118,7 @@ ContextLegend.prototype.addCells = function(svg){
     .append("rect")
     .attr("id",function(d,i){return i;})
     .attr('width', w)
-    .attr('x',function(d,i){return i * w + 70;})
+    .attr('x',function(d,i){return i * w + 75;})
     .attr('y', 10)
     .attr('height', 10)
     .style('fill', function(d,i){
@@ -128,11 +128,13 @@ ContextLegend.prototype.addCells = function(svg){
 
   cell
     .append("text")
-    .attr('x', function(d,i){ return i * w + 70;})
+    .attr('x', function(d,i){ return i * w + 75;})
     .attr('y', 10)
     .attr("dy", "-0.35em")
     .attr("dx", ".35em")
-    .text(function(d,i){return data[i];})
+    .text(function(d,i){
+        return data[i]+1;
+      })
     .style("font-size","9px");
 }
 

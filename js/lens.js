@@ -1571,6 +1571,7 @@ class OnChartLense {
   // other class.
 
   update_context_view(){
+
     const _this = this,
           context = _this.context;
 
@@ -1583,11 +1584,27 @@ class OnChartLense {
           y = context.scales.y.range([parseFloat(_this.div.style("height"))- 85 ,padding.top]);
 
     const width   = parseFloat(_this.div.style("width")),
-          height  = parseFloat(_this.div.style("height"))-padding.top;
+          height  = parseFloat(_this.div.style("height"));
 
     let color_lst = [];
 
     this.svg.style("height",height);
+    this.svg.select('#map_graph_y_axis_ID').remove(); 
+    this.svg.select('#map_graph_x_axis_ID').remove(); 
+
+
+    this.svg.append("g")
+       .attr("class", "x_axis")
+       .attr("id", "map_graph_x_axis_ID")
+       .attr("transform", "translate(0," + (height - 49) + ")")
+       .call(d3.axisBottom(x).ticks(5));
+
+    this.svg.append("g")
+        .attr("id", "map_graph_y_axis_ID")
+        .attr("class", "y_axis")
+        .attr("transform", "translate(22,15)")
+        .call(d3.axisLeft(y).ticks(4));
+        
     const newdata = _this.get_data();
 
     context.path
@@ -1605,7 +1622,7 @@ class OnChartLense {
           return context.color(d.value);
         })
         .attr("d", d3.geoPath())
-        .attr("transform","translate(0,"+20+")");
+        .attr("transform","translate(10,"+15+")");
 
         /*
         Adding legend here.
@@ -1842,6 +1859,7 @@ class OnChartLense {
 
     const path = svg.insert("g", "g")
         .attr("fill", "none")
+        .attr("id","_map")
         .attr("stroke", "#000")
         .attr("stroke-width", 0.5)
         .attr("stroke-linejoin", "round")
@@ -1857,12 +1875,25 @@ class OnChartLense {
           .bandwidth(10)
         (newdata))
       .enter().append("path")
+        .attr("class","map_path")
         .attr("fill", function(d) {
           color_lst.push(d.value);
           return color(d.value);
         })
         .attr("d", d3.geoPath())
-        .attr("transform","translate(0,"+ 20 +")");;
+        .attr("transform","translate(10,"+ 15 +")");
+
+    svg.append("g")
+       .attr("class", "x_axis")
+       .attr("id", "map_graph_x_axis_ID")
+       .attr("transform", "translate(0," + (height - 49) + ")")
+       .call(d3.axisBottom(x).ticks(5));
+
+    svg.append("g")
+        .attr("id", "map_graph_y_axis_ID")
+        .attr("class", "y_axis")
+        .attr("transform", "translate(22,15)")
+        .call(d3.axisLeft(y).ticks(4));
 
     /*
     Adding legend here.
@@ -1944,8 +1975,8 @@ class OnChartLense {
         const x_scale = d3.scaleLinear().domain([+selection.x.min,+selection.x.max]).range([30,parseFloat(_this.div.style("width"))- 30]),
               y_scale = d3.scaleLinear().domain([+selection.y.min,+selection.y.max]).range([parseFloat(_this.div.style("height"))- 85 ,padding.top]);
 
-        const x0 = Math.round(x_scale.invert(d3.mouse(this)[0])),
-              y0 = Math.round(y_scale.invert(d3.mouse(this)[1]));
+        const x0 = Math.round(x_scale.invert(d3.mouse(this)[0] - 10)),
+              y0 = Math.round(y_scale.invert(d3.mouse(this)[1] - 15));
 
         //console.log(d3.mouse(this)[0]+","+d3.mouse(this)[1])
 
@@ -1967,8 +1998,9 @@ class OnChartLense {
         _this.focus.style("display", null);
 
         lense_lst.forEach(function(lens){
-          if(lens instanceof OnChartLense) lens.lens_mouseover(x0,y0);
-          else lens.show_timesteps(x0,0);
+          if(lens instanceof OnChartLense){
+            //lens.lens_mouseover(x0,y0);
+          }else lens.show_timesteps(x0,0);
         });
       })
       .on("mouseout",function(){
@@ -2037,7 +2069,7 @@ class OnChartLense {
           h = parseFloat($("#scale_y_row").slider("value"));
 
     this.crosshair
-      .attr("transform", "translate(" + graph_x(x) + "," + (graph_y(y)+(storylines_g_margin.bottom + (default_chart_styles.spacing_y) - storyline_height)) + ")")
+      .attr("transform", "translate(" + graph_x(x) + "," + graph_y(y) + ")")
       .attr("r",h/25);
 
     this.focus.style("display", null);
