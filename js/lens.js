@@ -4,15 +4,15 @@ let lense_lst = [],
 
 const lense = {
   "height" : {
-    "group":380,
-    "single line":300,
+    "group":430,
+    "single line":450,
     "outlier":500,
     "trend":340,
     "context":300,
     "flow":300
   },
   "width" : {
-    "group":500,
+    "group":440,
     "single line":350,
     "outlier":510,
     "trend":750,

@@ -491,6 +491,11 @@ class Egoline{
        }
      });
 
+     data = data.filter(function(d){
+       if(d.character == clicked_line) return false;
+       return true;
+     })
+
      // Chris filtering method
      data = data.filter(function(d){
        if(!filtered_entities.includes(d.character)){

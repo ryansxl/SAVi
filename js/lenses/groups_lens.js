@@ -136,7 +136,7 @@ class Group {
           .append('svg')
           .attr("class","stack-graph-svg")
           .attr("id",id)
-          .attr("height",h*2)
+          .attr("height",500)
           .attr("width",w);
 
     let filtered_entities = [];
@@ -158,14 +158,188 @@ class Group {
 
     this.create_new_stack_graph(group_name,_bubbleset_data,filtered_d,d,w,container,{start:d0,stop:d1});
     this.create_bar_graph(container,_bubbleset_data,group_name,d,this.area_height,w,d0,d1);
+    var line_data = this.get_line_data(this.range,_bubbleset_data,group_name);
+    this.create_line_graph(group_name,line_data,container,this.range,w);
+
   };
+
+  create_line_graph(group_name,line_data,svg,range,width){
+
+    const offset = 20,
+          spacing = 10;
+    
+    const _lense_label =  d3.select("#lense_label_"+String(svg.attr("id").replace("analysis_view_","")));
+
+    svg = svg.append("g").attr("transform","translate(15,300)");
+
+    let x = d3.scaleLinear().domain([range.start,range.stop]).range([23,width-20]);
+
+    const line = d3.line()
+              .x(function(d){return x(d.x)})
+              .y(function(d){return (d.y*spacing) + offset;});
+
+
+    svg.append("text")
+      .attr("transform", "translate(0,10)")
+      .attr("y",-20)
+      .attr("x","47%")
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .style("font-size","1em")
+      .style("color","#d3d3d3")
+      .text("Entity With High Frequency");
+
+    svg.append("g")
+       .attr("class","line_graph")
+       .selectAll(".char_line")
+       .data(line_data)
+       .enter()
+       .append("path")
+       .attr("class",function(d){return "line_graph_"+d.character;})
+       .attr("d",function(d){
+
+          let t;
+          if(parseInt(d.timestep_start) === parseInt(range.stop)){
+            t=[{x:0,y:0},{x:0,y:0}];
+            return line(t);
+          }else if(parseInt(d.timestep_stop) === parseInt(range.stop)){
+            t = [{x: parseFloat(d.timestep_start), y: parseFloat(d.order)}, {x: parseFloat(d.timestep_stop), y: parseFloat(d.order)}];           
+          }else if(parseInt(d.timestep_start) === parseInt(d.timestep_stop)){
+            t = [{x: parseFloat(d.timestep_start), y: parseFloat(d.order)}, {x: parseFloat(+d.timestep_stop+1), y: parseFloat(d.order)}];
+          }else{
+            t = [{x: parseFloat(d.timestep_start), y: parseFloat(d.order)}, {x: parseFloat(+d.timestep_stop+1), y: parseFloat(d.order)}];
+          }
+          return line(t);
+
+       })
+       .style("stroke", "#d3d3d3")
+       .style("stroke-width", "4px")
+       .on("mouseover", function(d) {
+             //d3.select(this).transition().text(d.character);
+          _lense_label.text(d.character);
+          d3.selectAll(".group").style("opacity","0.15");
+          d3.selectAll("." +group_name).style("opacity",0.7).style("stroke","black").style("stroke-width","0px");
+          d3.select("#storylines_g_child").selectAll("."+d.character).style("opacity",1);
+           })
+       .on("mouseout", function(d) {
+
+          _lense_label.text("");
+          d3.select("#storylines_g_child").selectAll("."+d.character).style("opacity",0);
+
+           })
+
+
+    svg.append("g")
+       .attr("class","line_text")
+       .selectAll(".char_text")
+       .data(line_data)
+       .enter()
+       .append("text")
+       .attr("x",function(d){
+             return -15;
+           })
+       .attr("y",function(d){
+             return (parseFloat(d.order)*spacing) + offset - 3;
+           })
+       .attr("dy","0.55em")
+       .style("fill", function(d){ return "#d3d3d3";})
+       .style("font-size", "11px")
+       .text(function(d){
+             if(d.character.length > 4)
+              return d.character.slice(0,4) + "..";
+            return d.character;
+        })
+       .on("mouseover", function(d) {
+             //d3.select(this).transition().text(d.character);
+          _lense_label.text(d.character);
+           })
+       .on("mouseout", function(d) {
+
+          _lense_label.text("");
+
+           })
+
+
+
+  }
+
+  get_line_data(range,data,select_group){
+
+    const d0 = +range.start, d1 = +range.stop;
+    let _this = this;
+
+    data = data.filter(function(d){
+
+      if(d.group != select_group || d.timestep_stop < d0 || d.timestep_start >= d1) return false;
+      return true;
+    });
+
+    data.map(function(d){
+
+      if(d.timestep_start < d0){
+        d.timestep_start = d0;
+      }
+      if(d.timestep_stop > d1){
+        d.timestep_stop = d1;
+      }
+
+    })
+
+    var char_list = [];
+    var list = [];
+    data.forEach(function(d){
+      if(!(list.includes(d.character))){
+        char_list.push({character: d.character,time:0});
+        list.push(d.character);
+      }
+    });
+
+    char_list.forEach(function(ch){
+      data.forEach(function(d){
+        if(d.character === ch.character){
+          ch.time += parseInt(d.timestep_stop) - parseInt(d.timestep_start) + 1;
+        }
+      });
+    });
+
+    char_list = char_list.sort(function(a,b){
+      if(a.time != b.time){
+        return a.time - b.time;
+      }else{
+        if(a.character < b.character){
+          return -1;
+        }
+          return 1;
+      }
+    })
+    
+    for(let i = 0; i < char_list.length; i++){
+      for(let j = 0; j < data.length; j++){
+        if(char_list[i].character === data[j].character){
+          data[j].order = char_list.length - i ;
+        }
+      }
+    }
+
+
+    data = data.filter(function(d){
+      if(d.order <= 8) return true;
+      return false;
+    });
+
+    return data;
+
+
+
+
+  }
 
   create_new_stack_graph(group_name,group_data,new_data,data,new_width,svg,range){
     const new_height = this.area_height = 130;
 
     var area_scale = {min:0,max:this.get_max_of_stacked_graph_data(new_data)};
 
-    let x = d3.scaleLinear().domain([range.start,range.stop]).range([3,new_width-20]),
+    let x = d3.scaleLinear().domain([range.start,range.stop]).range([10,new_width-20]),
         y = d3.scaleLinear().domain([area_scale.min,area_scale.max]).range([new_height, 15]);
 
     this.local = {
@@ -226,7 +400,7 @@ class Group {
     var area_axis = svg.append("g")
         .attr("id", "stack_graph_y_axis_ID")
         .attr("class", "y_axis")
-        .attr("transform", "translate(3,10)")
+        .attr("transform", "translate(10,10)")
         .call(d3.axisLeft(y).ticks(4));
 
     svg.append("text")
@@ -327,7 +501,7 @@ class Group {
     let g = svg.append("g").attr("transform","translate(15,170)");
 
     const bar = g.selectAll(".bar").data(new_data), stack = d3.stack().keys(characters).offset(d3.stackOffsetDiverging);
-    let x = d3.scaleLinear().domain([d0,d1]).range([3,w-20]),
+    let x = d3.scaleLinear().domain([d0,d1]).range([10,w-20]),
         y = d3.scaleLinear().domain([this.getMaxMin(data,group_name,stack)[0],this.getMaxMin(data,group_name,stack)[1]]).range([h*1,0]);
 
     this.bar_height = h,
@@ -353,7 +527,7 @@ class Group {
           //on_mouseover_entity(d.key);
          d3.selectAll("."+d.key).selectAll("rect").style("stroke","gold").style("stroke-width","2px");
          d3.selectAll(".group").style("opacity","0.15");
-         d3.selectAll("." +group_name).style("opacity",0.7).style("stroke","black").style("stroke-width","0px");
+         
          d3.select("#storylines_g_child").selectAll("."+d.key).style("opacity",1);
         })
         .on("mouseout", function(d){
@@ -413,7 +587,7 @@ class Group {
 
       this.bar_axis.y = g.append("g")
           .attr("class", "stack_bar_graph_axis")
-          .attr("transform", "translate(3," + padding.top + ")")
+          .attr("transform", "translate(10," + padding.top + ")")
           .call(d3.axisLeft(y).ticks(Math.min(this.getMaxMin(data,group_name,stack)[1] - this.getMaxMin(data,group_name,stack)[0],4)));
 
       const entering_label = g.append("text")
@@ -423,7 +597,7 @@ class Group {
         .style("text-anchor", "middle")
         .style("font-size","1em")
         .style("color","#d3d3d3")
-        .text("Entering & Leaving");
+        .text("Entering & Leaving Entity");
 
 //       const leaving_label = g.append("text")
 //         .attr("y", h*1.7)
