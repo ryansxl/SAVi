@@ -5,7 +5,7 @@ let lense_lst = [],
 const lense = {
   "height" : {
     "group":430,
-    "single line":450,
+    "single line":350,
     "outlier":500,
     "trend":340,
     "context":300,
@@ -437,8 +437,8 @@ class Lense {
         break;
       case "single line":
         const DT_id = "#"+(id)+"_DT_row";
-        const clr = rgb2hex(d3.select(DT_id).select(".minicolors-swatch-color").style("background-color"));
-        d3.select("#"+this.div_id).selectAll("."+id).style("stroke",clr);
+        //const clr = rgb2hex(d3.select(DT_id).select(".minicolors-swatch-color").style("background-color"));
+        d3.select("#"+this.div_id).selectAll("."+id).style("stroke","#d3d3d3");
         break;
       default:
         break;
@@ -629,7 +629,7 @@ class Lense {
     }
     else if(this.type == "single line"){
       const div = d3.select("#analysis_view_div_"+n);
-      const d = create_egoline_graph(n,this.character,d3.select("#analysis_view_"+n).select('svg'), $.extend(true, [], _bubbleset_data),bar_x,clicked_line_1,parseFloat(div.select('.chart-div').style("height")),$('#analysis_view_div_'+n).width()-20,d0,d1);
+      const d = create_egoline_graph(n,this.character,d3.select("#analysis_view_"+n), $.extend(true, [], _bubbleset_data),bar_x,clicked_line_1,parseFloat(div.select('.chart-div').style("height")),$('#analysis_view_div_'+n).width()-20,d0,d1);
       //this.freq.onResize(parseFloat(document.getElementById('analysis_view_div_'+n).style.width)-20,d);
     }
   };
@@ -846,7 +846,7 @@ class Lense {
            .attr("class","chart-div")
            .style("top","120px")
            .style('width', function(){ return lense.width[analysis_type] + 'px'; })
-           .style('height', String($('#analysis_view_div_'+this.lense_number).height() - 230) + 'px');
+           .style('height', String($('#analysis_view_div_'+this.lense_number).height() - 130) + 'px');
      }
      else if(this.type == "trend"){
        var div = background.append('div')
@@ -1013,7 +1013,7 @@ class Lense {
     else if(analysis_type == "single line"){
       const div = d3.select("#analysis_view_div_"+lense_number);
 
-      create_egoline_graph(lense_number,character,d3.select("#analysis_view_"+lense_number).select('svg'), $.extend(true, [], _bubbleset_data),bar_x,clicked_line_1,parseFloat(div.select('.chart-div').style("height")),$('#analysis_view_div_'+lense_number).width()-20,d0,d1);
+      //create_egoline_graph(lense_number,character,d3.select("#analysis_view_"+lense_number).select('svg'), $.extend(true, [], _bubbleset_data),bar_x,clicked_line_1,parseFloat(div.select('.chart-div').style("height")),$('#analysis_view_div_'+lense_number).width()-20,d0,d1);
 
       $('#analysis_view_div_'+lense_number).resizable({
         /*maxHeight: 780,*/ minHeight: 280, /*maxWidth: 700,*/ minWidth: 350,
@@ -1032,14 +1032,14 @@ class Lense {
 
                     update_anchor_lines(lense_number);
                     transform_lense_labels('#analysis_view_div_'+lense_number,$(this));
-                    const d = create_egoline_graph(lense_number,character,d3.select("#analysis_view_"+lense_number).select('svg'), $.extend(true, [], _bubbleset_data),bar_x,clicked_line_1,parseFloat(div.select('.chart-div').style("height")),$('#analysis_view_div_'+lense_number).width()-20,d0,d1);
+                    const d = create_egoline_graph(lense_number,character,d3.select("#analysis_view_"+lense_number), $.extend(true, [], _bubbleset_data),bar_x,clicked_line_1,parseFloat(div.select('.chart-div').style("height")),$('#analysis_view_div_'+lense_number).width()-20,d0,d1);
                     //freq.setRange(_this.selected_range).onResize(parseFloat(document.getElementById('analysis_view_div_'+lense_number).style.width)-20,d);
                   },
         stop:   function(){
                 let d0 = _this.selected_range.start,
                     d1 = _this.selected_range.stop;
 
-                  const d = create_egoline_graph(lense_number,character,d3.select("#analysis_view_"+lense_number).select('svg'), $.extend(true, [], _bubbleset_data),bar_x,clicked_line_1,parseFloat(div.select('.chart-div').style("height")),$('#analysis_view_div_'+lense_number).width()-20,d0,d1);
+                  const d = create_egoline_graph(lense_number,character,d3.select("#analysis_view_"+lense_number), $.extend(true, [], _bubbleset_data),bar_x,clicked_line_1,parseFloat(div.select('.chart-div').style("height")),$('#analysis_view_div_'+lense_number).width()-20,d0,d1);
                   //freq.setRange(_this.selected_range).onResize(parseFloat(document.getElementById('analysis_view_div_'+lense_number).style.width)-20,d);
                   d3.selectAll(".temp-view").remove();
 
@@ -1088,7 +1088,7 @@ class Lense {
       }
       else if(analysis_type == "single line"){
         d3.select(_id).select(".chart-div")
-          .style('height', String($('#analysis_view_div_'+_this.lense_number).height() - 230) + 'px')
+          .style('height', String($('#analysis_view_div_'+_this.lense_number).height() - 130) + 'px')
           .style("width",_w);
         d3.select(_id).select(".scarf_plot_container").style("width",_w);
         d3.select(_id).select("#scarf_plot_"+lense_number).style("width",_w);
@@ -1209,7 +1209,7 @@ class Lense {
         lense_lst[n-1].group_lens.show_group_analysis(d3_lens_view.select('svg'),String(d3.select("#analysis_view_div_"+n).select(".stack_graph").attr("id")),+_h - 35,_w,d0,d1,n);
       }
       else if(_type == "single line"){
-        const d = create_egoline_graph(n,_this.character,d3.select("#analysis_view_"+n).select('svg'), $.extend(true, [], _bubbleset_data),bar_x,clicked_line_1,parseFloat(d3.select("#analysis_view_div_"+n).select(".chart-div").style("height")),_w,d0,d1);
+        const d = create_egoline_graph(n,_this.character,d3.select("#analysis_view_"+n), $.extend(true, [], _bubbleset_data),bar_x,clicked_line_1,parseFloat(d3.select("#analysis_view_div_"+n).select(".chart-div").style("height")),_w,d0,d1);
         //_this.freq.setRange({start:d0,stop:d1}).onResize(_w,d);
         d3.selectAll(".temp-view").remove();
       }

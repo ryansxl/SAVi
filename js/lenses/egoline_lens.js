@@ -347,6 +347,8 @@ function create_egoline_graph(n,character,svg,bubble,bar_x,clicked_line_name_1,h
   svg.selectAll('.egoline_line').remove();
   svg.selectAll("#egoline_svg_ID").remove();
   svg.selectAll("#egoline_ID").remove();
+  svg.selectAll("#line_graph").remove();
+  svg.selectAll("#egoline_svg_ID").remove();
 
   // const node = document.getElementById("scarf_plot_"+n)
   // while (node && node.hasChildNodes()) {
@@ -426,6 +428,8 @@ class Egoline{
     this._draw_ego();
     this._draw_lines_interacting_with_ego();
     this._draw_scarf_plot();
+    var line_data = this.get_line_date();
+    this.render_line_graph(line_data);
   }
   _draw_scarf_plot(){
     this._render_scarf_plot();
@@ -440,6 +444,67 @@ class Egoline{
   /*
    * DATA PARSING
    */
+
+
+  get_line_date(){
+     const _this = this;
+     var d0 = _this.range.start, d1 = _this.range.stop;
+     var data = _this.group_d;
+     var char = _this.ego;
+
+
+     data.map(function(d){
+         if(+d.timestep_start < d0 && +d.timestep_stop > d1){
+           d.timestep_start = d0;
+           d.timestep_stop = d1;
+         }
+         else if(+d.timestep_start >= d0 && +d.timestep_start <= d1 && +d.timestep_stop > d1){
+           d.timestep_stop = d1;
+         }
+         else if(+d.timestep_start < d0 && +d.timestep_stop >= d0 && +d.timestep_stop <= d1){
+           d.timestep_start = d0;
+         }
+     });
+
+     var char_data = data.filter(function(d){ 
+        return d.character == char && d.timestep_start >= d0 && d.timestep_stop <= d1;
+     })
+
+     var char_group = [];
+
+     char_data.forEach(function(d){
+       if(!char_group.includes(d.group)){
+         char_group.push(d.group);
+       }
+     })
+
+     data = data.filter(function(d){
+       if(d.character == char) return false;
+       return true;
+     })
+
+     data = data.filter(function(d){
+       if(d.timestep_start > d1 || d.timestep_stop < d0) return false;
+       return true;
+     })
+
+     var res = [];
+
+     for(let i = d0; i <=d1; i++){
+      var num = 0;
+      data.forEach(function(d){
+        char_data.forEach(function(ch){
+            if(ch.group === d.group && ch.timestep_start<=i && ch.timestep_stop >=i && d.timestep_start<=i && d.timestep_stop>=i){
+              num+=1;
+            }
+        })
+      })
+      res.push({x:i,y:num});
+     }
+
+     return res;
+  }
+
    _get_lines_interacting_with_ego_d(){
      const _this = this;
      let order = this._sort_characters(this.range,this.group_d,this.ego);
@@ -739,9 +804,135 @@ class Egoline{
          }
    }
 
+
+  render_line_graph(data){
+
+    const _this = this;
+    var d0 = _this.range.start, d1 = _this.range.stop;
+    let num_characters = parseFloat(this.num_characters_interacting_with_ego);
+    let _lense_label =  d3.select("#lense_label_"+this.lense_number);
+    var max_num = 0;
+    data.forEach(function(d){
+      if(d.y > max_num){
+        max_num = d.y;
+      }
+    })
+
+  egoline_svg
+     .append("text")
+     .attr("x",0)
+     .attr("y",52)
+     .style("fill","#d3d3d3")
+     .style("font-size","14px")
+     .text("Entities");
+
+  egoline_svg
+     .append("text")
+     .attr("x",10)
+     .attr("y",72)
+     .style("fill","#d3d3d3")
+     .style("font-size","14px")
+     .text("Size");
+
+
+  egoline_svg
+     .append("text")
+     .attr("x",70)
+     .attr("y",52)
+     .attr("dy", "0em")
+     .style("fill","#d3d3d3")
+     .style("font-size","11px")
+     .text("- - Size of Entities related to "+ _this.ego +" - -");
+
+
+    let x = this.scale.x,
+        y = d3.scaleLinear().domain([0,max_num]).range([130,60]);
+
+    let area = d3.area()
+      .curve(d3.curveCatmullRom)
+      .x(function(d,i) {return x(d.x)+_this.margin.left;})
+      .y0(function(d) {return 130;})
+      .y1(function(d) {return y(d.y);});
+
+
+    var line_area = egoline_svg
+      .append("path")
+      .attr("class", "line_graph")
+      //.attr("transform", "translate(0,10)")
+      //.attr("id", function(d) { return group_name; })
+      .style("fill", function(d) { return "#d3d3d3"; })
+      .style("opacity",function() { return 0.7; })
+      .attr("d", area(data));
+
+
+    var area_axis = egoline_svg.append("g")
+        .attr("id", "line_graph_y_axis_ID")
+        .attr("class", "y_axis")
+        .attr("transform", "translate(70,0)")
+        .call(d3.axisLeft(y).ticks(Math.min(4,max_num)));
+
+
+    var area_axis2 = egoline_svg.append("g")
+        .attr("id", "line_graph_x_axis_ID")
+        .attr("class", "x_axis")
+        .attr("transform", "translate(70,130)")
+        .call(d3.axisBottom(x).ticks(4).tickFormat(""));
+
+     var now_pos =   egoline_svg.append("line")          // attach a line
+          .style("stroke", "#696969")  // colour the line
+          .attr("x1", 70)     // x position of the first end of the line
+          .attr("y1", 55)      // y position of the first end of the line
+          .attr("x2", 70)     // x position of the second end of the line
+          .attr("y2", 135)
+          .attr("transform", "translate(0," + 0 + ")")
+          .style("opacity",0.7)
+          .style("display", "none");
+
+    var cur_pos =  egoline_svg.append("text")
+            .attr("class","timestep")
+            .attr("x",70)
+            .attr("y",143)
+            .attr("dx", "-.5em")
+            .attr("transform", "translate(0," + 0 + ")")
+            .style("font-size","10px")
+            .style("fill","#696969")
+            .style("opacity",0.7)
+            .style("display", "none");
+
+    const overlay = egoline_svg.append("rect")
+                       .attr("class","overlay")
+                       .attr("x",70)
+                       .attr("y",55)
+                       .attr("width",x(d1)-x(d0))
+                       .attr("height",75)
+                       .attr("opacity",0)
+                       .on("mouseover",function(){
+                       })
+                       .on("mouseout",function(){
+                          _lense_label.text("");
+                          now_pos.style("display", "none");
+                          cur_pos.style("display", "none");
+                       })
+                       .on("mousemove",function(){
+                         let x0 = x.invert(d3.mouse(this)[0] - 70),
+                          j = Math.round(x0);
+                         let i = data[j - d0].y;
+                          _lense_label.text("Time : "+" - > "+j+" - > " +i+ " Entities");
+                          
+                          now_pos.attr("transform", "translate(" + x(j) +","+ 0 + ")")
+                          now_pos.style("display", "");
+                          cur_pos.attr("transform", "translate(" + x(j) +","+ 0 + ")")
+                          cur_pos.text(j);
+                          cur_pos.style("display", "");
+
+
+                       })
+
+  }
+
    _render_lines_interacting_with_ego(data){
      let num_characters = parseFloat(this.num_characters_interacting_with_ego);
-     const offset = 50,
+     const offset = 160,
           spacing = 10,
           _h = this.height,
           _x = this.scale.x,
@@ -776,7 +967,7 @@ class Egoline{
     egoline_svg
      .append("text")
      .attr("x",0)
-     .attr("y",45)
+     .attr("y",155)
      .style("fill","#d3d3d3")
      .style("font-size","14px")
      .text("Entities");
@@ -784,7 +975,7 @@ class Egoline{
      egoline_svg
       .append("text")
       .attr("x",70)
-      .attr("y",45)
+      .attr("y",155)
       .style("fill","#d3d3d3")
       .style("font-size","11px")
       .text(show_str);
@@ -1004,3 +1195,4 @@ class Egoline{
 
 
 } // END CLASS EGOLINE
+  
