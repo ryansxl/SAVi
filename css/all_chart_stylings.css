@@ -814,3 +814,30 @@ left:45px;
   fill: #ccc;
   font-size: 8px;
 }
+
+
+#line_graph_y_axis_ID line{
+  stroke: #ccc;
+  stroke-width: 1px;
+}
+#line_graph_y_axis_ID path{
+  stroke: #ccc;
+  stroke-width: 1px;
+}
+#line_graph_y_axis_ID  text{
+  fill: #ccc;
+  font-size: 8px;
+}
+
+#line_graph_x_axis_ID line{
+  stroke: #ccc;
+  stroke-width: 1px;
+}
+#line_graph_x_axis_ID path{
+  stroke: #ccc;
+  stroke-width: 1px;
+}
+#line_graph_x_axis_ID  text{
+  fill: #ccc;
+  font-size: 8px;
+}
