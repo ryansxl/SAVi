@@ -532,7 +532,7 @@ function setupAndDrawStoryline() {
   let graph_width = $(window).width()	- 290;
 
   graph_margin  = {top: 20, right: 20, bottom: 30, left: 50},
-  graph_x       = d3.scaleLinear().range([0, graph_width]).domain([-5,lengthOfStoryline+4]),
+  graph_x       = d3.scaleLinear().range([0, graph_width]).domain([-5,lengthOfStoryline+5]),
   bar_x         = d3.scaleLinear().range([0, graph_width]).domain(d3.extent(convert_bubble_set_data_to_stack_graph_data(_bubbleset_data,null), function(d,i) { return i }));
 
   let arrayOfStorylinesDataValues = arrayOfArrays2Array(_storyline_data);

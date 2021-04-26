@@ -395,7 +395,6 @@ class Trend{
         .attr('width', (w-20)/(timestep_stop-timestep_start+1) - 2 * delta_width)
         .attr('height', function(d){
           if(d.intensity == 0) return h-10;
-          console.log(d.x+" .  "+d.intensity);
           return (h-30)*d.intensity/d3.max(color_palette);
           })
         .attr('y', function(d) {

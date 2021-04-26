@@ -7,7 +7,7 @@ const lense = {
     "group":430,
     "single line":350,
     "outlier":500,
-    "trend":340,
+    "trend":180,
     "context":300,
     "flow":300
   },
@@ -175,7 +175,7 @@ class TimestepSignature{
     this.initial = {
       height:height,
       position:{
-        x:parseFloat(d3.select('.selection').attr('x')),
+        x:parseFloat(d3.select('.selection').attr('x'))+20,
         // y:parseFloat($(window).height()-155)+15+timestep_marker_dy
         y:+container.attr("y") + (container.attr("height") - height)/2
       },
@@ -203,7 +203,7 @@ class TimestepSignature{
           _y = this.initial.position.y,
           _id = this.id;
 
-    const _storylines_g_child = d3.select("#storylines_g_child");
+    const _storylines_g_child = d3.select("#storyline_svgID");
 
     this.marker = _storylines_g_child.append("svg").append('rect');
 
@@ -211,7 +211,7 @@ class TimestepSignature{
         .attr('class','timestep_marker')
         .attr('id',_id)
         .attr('x',_x)
-        .attr('y',d3.select('.selection').attr('y'))
+        .attr('y',d3.select('.selection').attr('y')+65)
         .attr('height',d3.select('.selection').attr('height'))
         .attr('width',_w)
         .attr('fill',d3.select('.selection').attr('fill'))
@@ -934,7 +934,7 @@ class Lense {
 
     if(analysis_type == "trend"){
       $('#analysis_view_div_'+lense_number).resizable({
-        /*maxHeight: 150,*/ minHeight: 150, /*maxWidth: 600,*/ minWidth: 550,
+        maxHeight: 270, minHeight: 150, /*maxWidth: 600,*/ minWidth: 650,
 
         start:  function(){
                   update_anchor_lines(lense_number);
@@ -952,7 +952,7 @@ class Lense {
     }
     else if(analysis_type == "group"){
       $('#analysis_view_div_'+lense_number).resizable({
-        /*maxHeight: 600,*/ minHeight: 380, /*maxWidth: 700,*/ minWidth: 350,
+        maxHeight: 520, minHeight: 520, /*maxWidth: 700,*/ minWidth: 350,
 
         start:  function(){
                   update_anchor_lines(lense_number);
@@ -1105,7 +1105,7 @@ class Lense {
       const _id = '#analysis_view_div_'+n, _h = $('#analysis_view_div_'+n).height()-padding_h, _w = $('#analysis_view_div_'+n).width()-padding_w;
       const new_range = {start:+d3_timestep_label.select("#start").node().value,stop:+d3_timestep_label.select("#stop").node().value};
       _this.set_selected_range(new_range);
-      timestep_marker_lst[n-1].update_range(new_range);
+      //timestep_marker_lst[n-1].update_range(new_range);
 
       _this.axis.set_range(new_range).resizeAxis({width:parseFloat(_w)});
 
@@ -2517,7 +2517,7 @@ function add_timestep_range_selection(group){
     .attr("class", "select_brush")
     // .attr("transform", "translate(" + (0) + "," + (storylines_g_margin.bottom + (default_chart_styles.spacing_y) - storyline_height) + ")")
     .call(d3.brushX()
-        .extent([[graph_x(1), 0], [default_chart_styles.spacing_x - graph_x(2), default_chart_styles.spacing_y]]) //
+        .extent([[graph_x(1), 0], [default_chart_styles.spacing_x - graph_x(2), default_chart_styles.spacing_y - 100]]) //
         .on("start", function(){
           brushstart();
         })
@@ -2576,12 +2576,14 @@ function add_timestep_range_selection(group){
       d1[1] = d1[0] + 1;
     }
     
-    const scale = d3.scaleLinear()
-      .range(x_scale.domain())
-      .domain(graph_x.domain());
+    if(rescaled_graph_x!== undefined){
+         const scale = d3.scaleLinear()
+          .range(x_scale.domain())
+          .domain(graph_x.domain());
+          d1[0] = Math.round(+scale(d1[0]));
+          d1[1] = Math.round(+scale(d1[1]));
+    }
 
-    d1[0] = Math.round(+scale(d1[0]));
-    d1[1] = Math.round(+scale(d1[1]));
 
     timestep_marker_lst.push(new TimestepSignature(d3.select("#storyline_svgID"),d1[0],d1[1]));
 
@@ -3073,8 +3075,9 @@ d3.selection.prototype.add_range_annotations_mouseover = function(n){ //FIXME: D
     d3.selectAll(".timestep-select").remove();
     d3.select("#storylines_g_child").append("rect")
       .attr("class","timestep-select")
-      .attr("y",20).attr("x",graph_x(d0))
-      .attr("height",default_chart_styles.spacing_y).attr("width",graph_x(d1)-graph_x(d0))
+      .attr("y",-5).attr("x",graph_x(d0))
+      .attr("height",default_chart_styles.spacing_y-100)
+      .attr("width",graph_x(d1)-graph_x(d0))
       .attr("transform", "translate(" + 0 + "," +
                                     (storylines_g_margin.bottom + (default_chart_styles.spacing_y) -
                                       storyline_height - graph_margin.top) + ")");

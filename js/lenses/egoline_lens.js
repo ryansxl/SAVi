@@ -912,12 +912,16 @@ class Egoline{
                           _lense_label.text("");
                           now_pos.style("display", "none");
                           cur_pos.style("display", "none");
+                          let x0 = x.invert(d3.mouse(this)[0] - 70),
+                          j = Math.round(x0);
+                          d3.select(".timestep-single").remove();
                        })
                        .on("mousemove",function(){
                          let x0 = x.invert(d3.mouse(this)[0] - 70),
                           j = Math.round(x0);
                          let i = data[j - d0].y;
-                          _lense_label.text("Time : "+" - > "+j+" - > " +i+ " Entities");
+                          _lense_label.text("Time : " +j+" - > " +i+ " Entities");
+                          timestep_main_chart(j);
                           
                           now_pos.attr("transform", "translate(" + x(j) +","+ 0 + ")")
                           now_pos.style("display", "");
