@@ -71,8 +71,15 @@ class LenseAxis{
       var _w = parseFloat(d.width) - 60;
       this.height = d.height || this.height;
     }
-    const _x = this.scale.range([0,_w]);
-    this.div.style("width",(_w+20)+"px");
+    var _x = this.scale.range([0,_w]);
+    if(this.type == "trend"){
+      _x = this.scale.range([20,_w]);
+    }
+    if(this.type == "group"){
+      _x = this.scale.range([0,_w+24]);
+    }
+
+    this.div.style("width",(_w+40)+"px");
 
     this.numTicks = this._get_num_ticks();
     this.scale = this._set_scale(this.width);
@@ -106,9 +113,13 @@ class LenseAxis{
     let div = _container.append("div")
       .attr("class","lense-axis-div")
       .style("position","absolute")
-      .style("width",this.width+3+"px")
+      .style("width",this.width+20+"px")
       .style("height",this.height+"px")
       .style("left",this.left+"px");
+
+    if(this.type === "group"){
+      div.style("left",30+"px")
+    }
 
     if(this.type === "single line"){
       div.style("top","120px");
@@ -133,6 +144,13 @@ class LenseAxis{
     let x = d3.scaleLinear()
       .domain([_range.start,_range.stop])
       .range([0,_w-15]);
+
+    if(this.type == "group"){
+      x.range([0,_w]);
+    }
+    if(this.type == "trend"){
+      x.range([20,_w-15]);
+    }
     this.scale = x;
     return x;
   }
@@ -148,11 +166,11 @@ class LenseAxis{
       .attr("transform", "translate(10," + (this.height/3) + ")");
 
     if(this.type == "outlier"){
-      this.axis.call(d3.axisBottom(_x).ticks(_numTicks).tickValues(_x.ticks(0).concat(_x.domain())).tickFormat(d3.format(".0f")));
-      this.svg.select(".lense-axis").select(".domain").style("opacity",0);
-      this.svg.select(".lense-axis").selectAll("line").style("opacity",0);
+//       this.axis.call(d3.axisBottom(_x).ticks(_numTicks).tickValues(_x.ticks(0).concat(_x.domain())).tickFormat(d3.format(".0f")));
+//       this.svg.select(".lense-axis").select(".domain").style("opacity",0);
+//       this.svg.select(".lense-axis").selectAll("line").style("opacity",0);
     }
-    else{
+    else {
       this.axis.call(d3.axisBottom(_x).ticks(_numTicks).tickValues(_x.ticks(_numTicks).concat(_x.domain())).tickFormat(d3.format(".0f")));
     }
     return this;
@@ -374,7 +392,7 @@ class Lense {
         _this.trend.setstate(this.value);
         //update_trend(this.value);
         console.log(_this.trend.state+"changing1111111111" + this.value);
-        _this.trend.show_trend_detection(_this.trend.svg,_this.selected_range.start,_this.selected_range.stop,lense.height[_this.type],lense.width[_this.type]);
+        _this.trend.show_trend_detection(_this.trend.svg,_this.selected_range.start,_this.selected_range.stop,$('#analysis_view_div_'+_this.lense_number).height()-78,$('#analysis_view_div_'+_this.lense_number).width()-20);
       })
 
 //       function update_trend(value){
@@ -1056,7 +1074,9 @@ class Lense {
             d0 = _this.selected_range.start,
             d1 = _this.selected_range.stop;
 
-      _this.axis.resizeAxis({width:parseFloat(_w)});
+      if(analysis_type != "outlier"){
+          _this.axis.resizeAxis({width:parseFloat(_w)});
+      }
 
       if(analysis_type == "trend"){
         d3.select(_id).select(".chart-div")
@@ -2510,9 +2530,6 @@ function add_timestep_range_selection(group){
   d3.selectAll(".select_brush").transition().remove();
   let svg = d3.select("#storylines_g_child");
 
-
-  console.log('qyuqdiughcsihoihwoi');
-
   svg.append("g")
     .attr("class", "select_brush")
     // .attr("transform", "translate(" + (0) + "," + (storylines_g_margin.bottom + (default_chart_styles.spacing_y) - storyline_height) + ")")
@@ -2585,7 +2602,9 @@ function add_timestep_range_selection(group){
     }
 
 
-    timestep_marker_lst.push(new TimestepSignature(d3.select("#storyline_svgID"),d1[0],d1[1]));
+    if(!(group_mode_active && group == undefined) && !(line_mode_active && clicked_line_1 == undefined)){
+      timestep_marker_lst.push(new TimestepSignature(d3.select("#storyline_svgID"),d1[0],d1[1]));
+    }
 
     const rendering_pos = {
       x: 300 + (num_lenses*10),
@@ -2595,13 +2614,26 @@ function add_timestep_range_selection(group){
     num_lenses++;
 
     if(line_mode_active){
-      lense_lst.push(new Lense('single line',rendering_pos.x,rendering_pos.y,'null',clicked_line_1,d1[0],d1[1]));
-      remove_timestep_range_selection();
+      if(clicked_line_1 != undefined){
+        lense_lst.push(new Lense('single line',rendering_pos.x,rendering_pos.y,'null',clicked_line_1,d1[0],d1[1]));
+        remove_timestep_range_selection();
+      }else{
+        remove_timestep_range_selection();
+        num_lenses--;
+        return;
+      }
     }
     else if(group_mode_active){
-      lense_lst.push(new Lense('group',rendering_pos.x,rendering_pos.y,group,"null",d1[0],d1[1]));
+      if(group != undefined){
+          lense_lst.push(new Lense('group',rendering_pos.x,rendering_pos.y,group,"null",d1[0],d1[1]));
+          remove_timestep_range_selection();
+      }
+      else{
+          remove_timestep_range_selection();
+          num_lenses--;
+          return;
+      }
       // d3.selectAll(".group").style("opacity",1).style("stroke-width","0px");
-      remove_timestep_range_selection();
     }
     else if(outlier_mode_active){
       lense_lst.push(new Lense('outlier',rendering_pos.x,rendering_pos.y,'null','null',d1[0],d1[1]));
@@ -2893,6 +2925,14 @@ function add_close_icon(div,n){
         lense_lst.forEach(function(lens){
           lens.setActive(false);
         });
+        
+        if(lense_lst[n-1].type === "group"){
+
+          for(let i=0; i < group_lst.length; i++){
+            d3.selectAll("." +group_lst[i]).style("opacity",0.7).style("stroke","black").style("stroke-width","0px");
+          }         
+        }
+
 //         $("#filter_options_div").empty();
 
 //         if($('input[name=Global-Normalization]').prop('checked')){

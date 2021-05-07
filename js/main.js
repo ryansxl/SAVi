@@ -49,6 +49,8 @@ let _storyline_data,    // the raw lines data, loaded from data/[dataset_name]/l
     loadedColors = {};  // if included, the loaded file of colors
     loadedAttributes = {};
     groupcolors={};
+
+let reload_ = false;
 /*****************************************************************
  *                                                               *
  *                   SVG / Drawing global vars                   *
@@ -63,6 +65,8 @@ let _storyline_data,    // the raw lines data, loaded from data/[dataset_name]/l
  */
 function go() {
   console.log('-- loading the [' + $("#dataset_dropdown").val() + '] dataset --');
+  
+  reload_ = true;
   var q = d3.queue();
   q.defer(loadColors)       // load colors file (if it exists)
   q.defer(loadEntities)     // load the lines data

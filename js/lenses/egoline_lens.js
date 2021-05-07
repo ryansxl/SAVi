@@ -131,7 +131,7 @@ class Frequency {
      .duration(_rendering_time)
      .attr("d", area)
      .attr("transform", "translate("+this.margin.left+","+ -padding_bottom+")")
-     .style("fill","#d3d3d3");
+     .style("fill","#696969");
 
     // update
     a.transition()
@@ -184,7 +184,7 @@ class Frequency {
       .attr("dy", "1em")
       .style("text-anchor", "middle")
       .style("font-size","10px")
-      .style("fill","#d3d3d3")
+      .style("fill","#696969")
       .text("Groups Area");
 
       function get_data(d){
@@ -693,7 +693,7 @@ class Egoline{
      .attr("y",0)
      .attr("dy", "0em")
      .attr("transform","translate(70,20)")
-     .style("fill","#d3d3d3")
+     .style("fill","#696969")
      .style("font-size","11px")
      .text("- - Groups "+'"'+_this.ego+'"'+" visits in "+_this.range.start+" to "+_this.range.stop+" - -");
 
@@ -704,7 +704,7 @@ class Egoline{
      .attr("y",0)
      .attr("dy", "0em")
      .attr("transform","translate(0,20)")
-     .style("fill","#d3d3d3")
+     .style("fill","#696969")
      .style("font-size","14px")
      .text("Groups");
 
@@ -822,7 +822,7 @@ class Egoline{
      .append("text")
      .attr("x",0)
      .attr("y",52)
-     .style("fill","#d3d3d3")
+     .style("fill","#696969")
      .style("font-size","14px")
      .text("Entities");
 
@@ -830,7 +830,7 @@ class Egoline{
      .append("text")
      .attr("x",10)
      .attr("y",72)
-     .style("fill","#d3d3d3")
+     .style("fill","#696969")
      .style("font-size","14px")
      .text("Size");
 
@@ -840,7 +840,7 @@ class Egoline{
      .attr("x",70)
      .attr("y",52)
      .attr("dy", "0em")
-     .style("fill","#d3d3d3")
+     .style("fill","#696969")
      .style("font-size","11px")
      .text("- - Size of Entities related to "+ _this.ego +" - -");
 
@@ -860,7 +860,7 @@ class Egoline{
       .attr("class", "line_graph")
       //.attr("transform", "translate(0,10)")
       //.attr("id", function(d) { return group_name; })
-      .style("fill", function(d) { return "#d3d3d3"; })
+      .style("fill", function(d) { return "#808080"; })
       .style("opacity",function() { return 0.7; })
       .attr("d", area(data));
 
@@ -972,7 +972,7 @@ class Egoline{
      .append("text")
      .attr("x",0)
      .attr("y",155)
-     .style("fill","#d3d3d3")
+     .style("fill","#696969")
      .style("font-size","14px")
      .text("Entities");
 
@@ -980,7 +980,7 @@ class Egoline{
       .append("text")
       .attr("x",70)
       .attr("y",155)
-      .style("fill","#d3d3d3")
+      .style("fill","#696969")
       .style("font-size","11px")
       .text(show_str);
 
@@ -1013,7 +1013,7 @@ class Egoline{
           d3.select("#storylines_g_child").selectAll(".group").style("opacity",0.3);
            _lense_label.text(lense.placeholder_text);
          })
-         .style("stroke", "#d3d3d3")
+         .style("stroke", "#9F9F9F")
          .style("stroke-width", "4px");
 
        egoline_svg.append("g")
@@ -1105,7 +1105,7 @@ class Egoline{
           })
           .style("font-size", "12px")
           .text("Analyzing entities that interact with: ")
-          .style("fill","#d3d3d3")
+          .style("fill","#696969")
 
        _svg.append("text")
            .attr("class", "ego-text")

@@ -195,8 +195,15 @@ let add_group_analysis = function(d){
  */
 function draw_groups_chris2() {
 	// console.log('@@ draw_groups_chris2 @@')
-	const x_scale = (rescaled_graph_x) ? rescaled_graph_x:graph_x,
+
+	var x_scale = (rescaled_graph_x) ? rescaled_graph_x:graph_x,
 				y_scale = (rescaled_graph_y) ? rescaled_graph_y:graph_y;
+				    
+	if(reload_){
+        x_scale = graph_x;
+        y_scale = graph_y;	
+	}
+	reload_ = false;
 
 	const translate = d3.event ? d3.event.translate: 0;
 

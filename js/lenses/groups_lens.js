@@ -186,7 +186,7 @@ class Group {
       .attr("dy", "1em")
       .style("text-anchor", "middle")
       .style("font-size","1em")
-      .style("color","#d3d3d3")
+      .style("fill","black")
       .text("Entity With High Frequency");
 
     svg.append("g")
@@ -212,7 +212,7 @@ class Group {
           return line(t);
 
        })
-       .style("stroke", "#d3d3d3")
+       .style("stroke", "#9F9F9F")
        .style("stroke-width", "4px")
        .on("mouseover", function(d) {
              //d3.select(this).transition().text(d.character);
@@ -242,7 +242,7 @@ class Group {
              return (parseFloat(d.order)*spacing) + offset - 3;
            })
        .attr("dy","0.55em")
-       .style("fill", function(d){ return "#d3d3d3";})
+       .style("fill", function(d){ return "#202020";})
        .style("font-size", "11px")
        .text(function(d){
              if(d.character.length > 4)
@@ -401,7 +401,7 @@ class Group {
         .attr("id", "stack_graph_y_axis_ID")
         .attr("class", "y_axis")
         .attr("transform", "translate(10,10)")
-        .call(d3.axisLeft(y).ticks(4));
+        .call(d3.axisLeft(y).ticks(Math.min(4,area_scale.max)));
 
     svg.append("text")
       .attr("transform", "translate(0,10)")
@@ -410,7 +410,7 @@ class Group {
       .attr("dy", "1em")
       .style("text-anchor", "middle")
       .style("font-size","1em")
-      .style("color","#d3d3d3")
+      .style("fill","black")
       .text("Group Size");
 
       let focus = svg.append("g")
@@ -418,7 +418,7 @@ class Group {
            .style("display", "none");
 
         focus.append("line")          // attach a line
-          .style("stroke", "#d3d3d3")  // colour the line
+          .style("stroke", "#696969")  // colour the line
           .attr("x1", 0)     // x position of the first end of the line
           .attr("y1", new_height+4)      // y position of the first end of the line
           .attr("x2", 0)     // x position of the second end of the line
@@ -433,7 +433,7 @@ class Group {
             .attr("dx", "-.5em")
             .attr("transform", "translate(-40," + 10 + ")")
             .style("font-size","10px")
-            .style("fill","#d3d3d3");
+            .style("fill","#696969");
 
 
        const overlay = svg.append("rect")
@@ -467,7 +467,9 @@ class Group {
          focus.attr("transform", "translate(" + ( x(j) ) + ",0)");
          timestep_text.text(j);
          timestep_main_chart(j);
-         _lense_label.text("Time:"+ j+ " -> "+group_name+" : "+new_data[j-range.start][group_name]);
+         if(j>=range.start && j<=range.stop){
+           _lense_label.text("Time:"+ j+ " -> "+group_name+" : "+new_data[j-range.start][group_name]);
+         }
 //          d3.select("#lense_label_"+svg._parents[0].id.replace("analysis_view_g","")).text(""+group_name+" : "+new_data[j-range.start][group_name]);
        }
   };
@@ -565,7 +567,7 @@ class Group {
           if((w/d1-d0) > min_width && Math.abs(w/d1-d0) > 0) return (w/d1-d0);
           return min_width;
         })
-        .attr("fill", function(d) { return "#d3d3d3"; })
+        .attr("fill", function(d) { return "#696969"; })
         .on("mouseover",function(d,i){
           // console.log(d);
           mouseover_rect(i);
@@ -596,7 +598,7 @@ class Group {
         .attr("dy", "1em")
         .style("text-anchor", "middle")
         .style("font-size","1em")
-        .style("color","#d3d3d3")
+        .style("fill","black")
         .text("Entering & Leaving Entity");
 
 //       const leaving_label = g.append("text")
@@ -613,7 +615,7 @@ class Group {
            .style("display", "none");
 
         focus.append("line")          // attach a line
-          .style("stroke", "#d3d3d3")  // colour the line
+          .style("stroke", "#696969")  // colour the line
           .attr("x1", 0)     // x position of the first end of the line
           .attr("y1", h*1.5)      // y position of the first end of the line
           .attr("x2", 0)     // x position of the second end of the line
@@ -627,7 +629,7 @@ class Group {
             .attr("y",9)
             .attr("dx", "-.5em")
             .style("font-size","12px")
-            .style("fill","#d3d3d3")
+            .style("fill","#696969")
             .on("mouseover", function() { focus.style("display", null); });
 
        focus.append("text")
@@ -836,7 +838,7 @@ function convert_bubble_set_data_to_stack_graph_data(data,filtered_entities){
         let start = currentValue["timestep_start"]*1, stop = currentValue["timestep_stop"]*1;
         /* FIXME: This is a hack, the data in groups.csv goes past the number of timesteps specified in the line.tsv so
         it's crashing the code. */
-        if(stop>num_timesteps-1) stop = num_timesteps;
+        if(stop>num_timesteps-1) stop = num_timesteps-1;
         for (let j = start; j <= stop; j++) {
           ar[j][currentValue["group"]] = ar[j][currentValue["group"]] + 1;
         }

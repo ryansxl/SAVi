@@ -242,10 +242,6 @@ class Trend{
       datapos.push(infopos);
       infopos = {};
     }
-//     console.log(data);
-    console.log(dataexit);
-//     console.log(dataenter);
-    console.log(datapos);
 
     let datagroup = [], infogroup ={};
     for(let i = timestep_start; i <= timestep_stop; i++){
@@ -354,7 +350,7 @@ class Trend{
   }
 
   create_heatmap(svg,data,timestep_start,timestep_stop,h,w){
-    svg.select('.trend_x_axis').remove();
+    svg.select('.trend_y_axis').remove();
     svg.selectAll('.cell').remove();
     svg.select('#background').remove();
     svg.select('#close').remove();
@@ -444,7 +440,7 @@ class Trend{
     svg.append("g")
        .attr("class", "trend_y_axis")
        .attr("transform", "translate(19,-2)")
-       .call(d3.axisLeft(y).ticks(5).tickSize(2))
+       .call(d3.axisLeft(y).ticks(Math.min(5,d3.max(color_palette))).tickSize(2))
        .style("font-size","11px")
     
 
