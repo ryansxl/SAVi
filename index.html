@@ -87,10 +87,10 @@
           <td colspan='2'>
             <select class="form-control" id="dataset_dropdown">
               <option>EpiSimS</option>
-              <option selected>nba</option>
+              <option>nba</option>
               <option>PNNL</option>
-              <option>Matrix</option>
-              <!-- <option>Star Wars</option> -->
+              <option selected>Matrix</option>
+              <option>Star Wars</option>
               <!-- Only 300.tsv works fast enough -->
               <!-- <option>Tech Co Acquisitions</option> -->
               <!-- <option>Star Wars</option> -->
@@ -103,15 +103,15 @@
           <td>Chart Scaling<span style='float:right'>
           </span></td>
           <td>
-            <input id="scale_x_row_button" type="submit" value="X">
-            <input id="scale_y_row_button" type="submit" value="Y">
+            <input id="scale_x_row_button" type="submit" value="X" style = "color: #d3d3d3">
+            <input id="scale_y_row_button" type="submit" value="Y" style = "color: #d3d3d3">
             <script>
-            var x_scaling_on = true;
+            var x_scaling_on = false;
             $("#scale_x_row_button").click(function(btn){
               x_scaling_on = !x_scaling_on;
               d3.select("#scale_x_row_button").style("color",x_scaling_on ? "black":"#d3d3d3");
             });
-            var y_scaling_on = true;
+            var y_scaling_on = false;
             $("#scale_y_row_button").click(function(btn){
               y_scaling_on = !y_scaling_on;
               d3.select("#scale_y_row_button").style("color",y_scaling_on ? "black":"#d3d3d3");
