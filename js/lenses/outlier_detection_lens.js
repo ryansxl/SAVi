@@ -43,6 +43,7 @@ function get_characters(d0,d1){
 function show_outlier_analysis(svg,h,w,d0,d1,lense_number){
   svg.select("#adjacencyG").remove();
   svg.selectAll("text").remove();
+  svg.selectAll("#pies").remove();
 
   let adj_matrix        = matrix(characters);
   let active_characters = [], links = [];
@@ -151,7 +152,8 @@ function get_links_data(adj_matrix,active_characters){
   let ret = [];
   active_characters.forEach(function(character_a,index_a){
     active_characters.forEach(function(character_b,index_b){
-      if(adj_matrix[character_a][character_b].val > 0 && character_a !== character_b) ret.push({source: character_a, target: character_b, value: adj_matrix[character_a][character_b].val});
+      if(adj_matrix[character_a][character_b].val > 0 && character_a !== character_b) ret.push({source: character_a, target: character_b, value: adj_matrix[character_a][character_b].val/2});
+      if(adj_matrix[character_a][character_b].val > 0 && character_a == character_b) ret.push({source: character_a, target: character_b, value: adj_matrix[character_a][character_b].val/2});
     })
   })
   return ret;
@@ -177,7 +179,7 @@ function get_max_node_val(d){
 };
 
 function create_adjacency_matrix(svg,adj_matrix_data,graph,dim,div){
-  const rect_diameter = (dim.w - 90) / graph.nodes.length;
+  const rect_diameter = (svg._groups[0][0].clientHeight - 84) / graph.nodes.length;
   let edgeHash = {};
   graph.links.forEach(edge =>{
     const id = edge.source + "-" + edge.target;

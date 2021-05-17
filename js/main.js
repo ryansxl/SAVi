@@ -51,6 +51,9 @@ let _storyline_data,    // the raw lines data, loaded from data/[dataset_name]/l
     groupcolors={};
 
 let reload_ = false;
+
+var rescaled_graph_x,
+    rescaled_graph_y;
 /*****************************************************************
  *                                                               *
  *                   SVG / Drawing global vars                   *
@@ -65,8 +68,11 @@ let reload_ = false;
  */
 function go() {
   console.log('-- loading the [' + $("#dataset_dropdown").val() + '] dataset --');
+
   
   reload_ = true;
+  rescaled_graph_x = null;
+  rescaled_graph_y = null;
   var q = d3.queue();
   q.defer(loadColors)       // load colors file (if it exists)
   q.defer(loadEntities)     // load the lines data
@@ -212,9 +218,9 @@ function loadEntities(callback) {
       fade_line(id,0.15);
       d3.select("#"+this.id).style("background-color","#d3d3d3");
 
-      lense_lst.forEach(function(lens){
-        lens.highlightEntity(id);
-      });
+//       lense_lst.forEach(function(lens){
+//         lens.highlightEntity(id);
+//       });
       }
       else{
         d3.select("#"+this.id).style("background-color","#d3d3d3");
@@ -235,9 +241,9 @@ function loadEntities(callback) {
         // d3.select("#"+this.id).transition().style("color","black").style("background-color","#fff");
       }
 
-      lense_lst.forEach(function(lens){
-        lens.unhighlightEntity(id);
-      });
+//       lense_lst.forEach(function(lens){
+//         lens.unhighlightEntity(id);
+//       });
       }
       else{
         d3.select("#"+this.id).style("background-color","white");
@@ -392,9 +398,9 @@ function loadGroups(callback) {
         }
          //const color = rgb2hex(d3.select("#"+this.id).select(".minicolors-swatch-color").style("background-color"));
          //d3.select("#"+this.id).style("background-color","#d3d3d3");
-         lense_lst.forEach(function(lens){
-           lens.highlightGroup(id);
-         });
+//          lense_lst.forEach(function(lens){
+//            lens.highlightGroup(id);
+//          });
       }
       else{
         fadegroups(select_group,0.15);
@@ -427,9 +433,9 @@ function loadGroups(callback) {
           d3.select("#storylines_g_child").selectAll(".point").style("opacity",0.5);
           d3.select("#storylines_g_child").selectAll("text").style("opacity",0.5);
       }
-      lense_lst.forEach(function(lens){
-        lens.unhighlightGroup(id);
-      });
+//       lense_lst.forEach(function(lens){
+//         lens.unhighlightGroup(id);
+//       });
 
     }
     else{

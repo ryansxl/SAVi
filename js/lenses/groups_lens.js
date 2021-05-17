@@ -165,23 +165,66 @@ class Group {
 
   create_line_graph(group_name,line_data,svg,range,width){
 
-    const offset = 20,
-          spacing = 10;
+
+    
+//     var div = svg.append("div")
+//              .attr("width","280px")
+//              .attr("height","120px");
+
+//     var newsvg = div.append("svg")
+//                 .attr("width","280px")
+//                 .attr("height","120px");
+
+
+//     newsvg.append("text")
+//        .text("Lyrics are a type of poetry. Those who enter music are called songs, and those who do not enter music are called poems (or words). Songs that enter music are no different from poetry in terms of emotional expression and image shaping, but they must be restricted by music in terms of structure and rhythm, convenience of singing in terms of rhythm, and characteristics of auditory art in terms of wording and refining characters. , Because it wants to sing into music. The main difference between lyrics and poems is that poems do not have to be music (combined music), but lyrics must be music together. The music becomes a song. Lyrics usually appear together with the melody of the song, and the lyrics are the original meaning of the song. In modern times, it is generally used in conjunction with music to facilitate humming.")
+//        .style("fill","black");
+
+
+    var cont = d3.select("#analysis_view_div_"+this.lense_number);
+    cont.selectAll(".line_div").remove();
+    var div = cont.append("div")
+                 .attr("class","line_div")
+                 .style("width",width+18+"px")
+                 .style("height","108px")
+                 .style("position","absolute")
+                 .style("bottom","40px")
+                 .style("left","0px")
+                 .style("overflow-y","scroll");
+
+    const offset = 10,
+          spacing = 11;
+
+
+    var line_height = 95;
+
+    line_data.forEach(function(line){
+      if((line.order - 1)*spacing + offset >= line_height){
+        line_height = (line.order - 1)*spacing + offset + 10;
+      }
+
+    });
+
+    var newsvg = div.append("svg")
+                    .attr("class","line_svg")
+                    .style("width",width+"px")
+                    .style("height",line_height+"px")
+
     
     const _lense_label =  d3.select("#lense_label_"+String(svg.attr("id").replace("analysis_view_","")));
 
     svg = svg.append("g").attr("transform","translate(15,300)");
 
-    let x = d3.scaleLinear().domain([range.start,range.stop]).range([23,width-20]);
+    let x = d3.scaleLinear().domain([range.start,range.stop]).range([37,width]);
 
     const line = d3.line()
               .x(function(d){return x(d.x)})
-              .y(function(d){return (d.y*spacing) + offset;});
+              .y(function(d){return ((d.y-1)*spacing) + offset;});
 
 
     svg.append("text")
       .attr("transform", "translate(0,10)")
-      .attr("y",-20)
+      .attr("y",-30)
       .attr("x","47%")
       .attr("dy", "1em")
       .style("text-anchor", "middle")
@@ -189,7 +232,8 @@ class Group {
       .style("fill","black")
       .text("Entity With High Frequency");
 
-    svg.append("g")
+
+    newsvg.append("g")
        .attr("class","line_graph")
        .selectAll(".char_line")
        .data(line_data)
@@ -229,17 +273,17 @@ class Group {
            })
 
 
-    svg.append("g")
+    newsvg.append("g")
        .attr("class","line_text")
        .selectAll(".char_text")
        .data(line_data)
        .enter()
        .append("text")
        .attr("x",function(d){
-             return -15;
+             return 5;
            })
        .attr("y",function(d){
-             return (parseFloat(d.order)*spacing) + offset - 3;
+             return (parseFloat(d.order - 1)*spacing) + offset - 3;
            })
        .attr("dy","0.55em")
        .style("fill", function(d){ return "#202020";})
@@ -252,10 +296,12 @@ class Group {
        .on("mouseover", function(d) {
              //d3.select(this).transition().text(d.character);
           _lense_label.text(d.character);
+          d3.select("#storylines_g_child").selectAll("."+d.character).style("opacity",1);
            })
        .on("mouseout", function(d) {
 
           _lense_label.text("");
+          d3.select("#storylines_g_child").selectAll("."+d.character).style("opacity",0);
 
            })
 
@@ -263,10 +309,11 @@ class Group {
 
   }
 
-  get_line_data(range,data,select_group){
+  get_line_data(range,original_data,select_group){
 
     const d0 = +range.start, d1 = +range.stop;
     let _this = this;
+    var data = JSON.parse(JSON.stringify(original_data));
 
     data = data.filter(function(d){
 
@@ -321,16 +368,12 @@ class Group {
       }
     }
 
-
-    data = data.filter(function(d){
-      if(d.order <= 8) return true;
-      return false;
-    });
+//     data = data.filter(function(d){
+//       if(d.order <= 8) return true;
+//       return false;
+//     });
 
     return data;
-
-
-
 
   }
 
@@ -467,8 +510,8 @@ class Group {
          focus.attr("transform", "translate(" + ( x(j) ) + ",0)");
          timestep_text.text(j);
          timestep_main_chart(j);
-         if(j>=range.start && j<=range.stop){
-           _lense_label.text("Time:"+ j+ " -> "+group_name+" : "+new_data[j-range.start][group_name]);
+         if(j>=range.start && j<=range.stop && j>=0 && j<lengthOfStoryline){
+           _lense_label.text("Time:"+ j+ " -> "+group_name+" : "+new_data[j-Math.max(0,range.start)][group_name]);
          }
 //          d3.select("#lense_label_"+svg._parents[0].id.replace("analysis_view_g","")).text(""+group_name+" : "+new_data[j-range.start][group_name]);
        }
@@ -617,7 +660,7 @@ class Group {
         focus.append("line")          // attach a line
           .style("stroke", "#696969")  // colour the line
           .attr("x1", 0)     // x position of the first end of the line
-          .attr("y1", h*1.5)      // y position of the first end of the line
+          .attr("y1", h*1.1)      // y position of the first end of the line
           .attr("x2", 0)     // x position of the second end of the line
           .attr("y2", -17)
           .attr("transform", "translate(0," +  padding.top + ")")
@@ -643,7 +686,7 @@ class Group {
        focus.append("text")
            .attr("class","entities-leaving-text")
            .attr("x",0)
-           .attr("y",h*1.5 + 5 + padding.top)
+           .attr("y",h*1.1 + padding.top)
            .attr("dx", "-1.2em")
            .attr("dy", ".55em")
            .style("fill","black")
@@ -732,9 +775,11 @@ class Group {
     _keys.forEach(function(key){
       if(key == _name){
         for (let i = _range.start; i <= _range.stop; i++) {
-          let obj = {};
-          obj[key] = _d[i][key];
-          temp.push(obj);
+          if(i>=0 && i<lengthOfStoryline){
+            let obj = {};
+            obj[key] = _d[i][key];
+            temp.push(obj);            
+          }
         }
       }
     })

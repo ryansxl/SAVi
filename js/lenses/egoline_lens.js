@@ -588,8 +588,8 @@ class Egoline{
 
        lines.forEach(function(l){
          groups.forEach(function(g){
-           if(!((l.timestep_start < g.timestep_start && l.timestep_stop < g.timestep_start) || (l.timestep_start > g.timestep_stop && l.timestep_stop > g.timestep_stop))){
-             if((l.timestep_start <= g.timestep_start && l.timestep_stop >= g.timestep_start) || (l.timestep_stop >= g.timestep_stop && l.timestep_start <= g.timestep_stop)){
+           if(!((+l.timestep_start < +g.timestep_start && +l.timestep_stop < +g.timestep_start) || (+l.timestep_start > +g.timestep_stop && +l.timestep_stop > +g.timestep_stop))){
+             if((+l.timestep_start <= +g.timestep_start && +l.timestep_stop >= +g.timestep_start) || (+l.timestep_stop >= +g.timestep_stop && +l.timestep_start <= +g.timestep_stop)){
                if(!data_lines.includes(l)) data_lines.push(l);
              }
            }
@@ -599,22 +599,36 @@ class Egoline{
 
      data = data_lines;
 
+     let newdata = [];
+
      data.map(function(d){
        egoline_d.forEach(function(ego){
          if(d.group == ego.group){
-             if(+d.timestep_start < +ego.timestep_start && +d.timestep_stop > +ego.timestep_stop){
-               d.timestep_start = +ego.timestep_start;
-               d.timestep_stop = +ego.timestep_stop;
+             if(+d.timestep_start <= +ego.timestep_start && +d.timestep_stop >= +ego.timestep_stop){
+               let newd = JSON.parse(JSON.stringify(d));
+               newd.timestep_start = +ego.timestep_start;
+               newd.timestep_stop = +ego.timestep_stop;
+               newdata.push(newd);
              }
-             else if(+d.timestep_start >= +ego.timestep_start && +d.timestep_start <= +ego.timestep_stop && +d.timestep_stop > +ego.timestep_stop){
-               d.timestep_stop = +ego.timestep_stop;
+             else if(+d.timestep_start >= +ego.timestep_start && +d.timestep_start <= +ego.timestep_stop && +d.timestep_stop >= +ego.timestep_stop){
+               let newd = JSON.parse(JSON.stringify(d));
+               newd.timestep_stop = +ego.timestep_stop;
+               newdata.push(newd);
              }
-             else if(+d.timestep_start < +ego.timestep_start && +d.timestep_stop >= +ego.timestep_start && +d.timestep_stop <= +ego.timestep_stop){
-               d.timestep_start = +ego.timestep_start;
+             else if(+d.timestep_start <= +ego.timestep_start && +d.timestep_stop >= +ego.timestep_start && +d.timestep_stop <= +ego.timestep_stop){
+               let newd = JSON.parse(JSON.stringify(d));
+               newd.timestep_start = +ego.timestep_start;
+               newdata.push(newd);
+             }
+             else if(+d.timestep_start >= +ego.timestep_start &&  +d.timestep_stop <= +ego.timestep_stop){
+              let newd = JSON.parse(JSON.stringify(d));
+              newdata.push(newd);
              }
          }
        })
      });
+
+     data = newdata;
 
      this.groups_lst = egoline_d;
 
@@ -639,14 +653,14 @@ class Egoline{
      character_lst.forEach(function(el){
        let time_spent = 0;
        data.forEach(function(d){
-         if(el.character == d.character) time_spent = time_spent + (parseInt(d.timestep_stop) - parseInt(d.timestep_start));
+         if(el.character == d.character) time_spent = time_spent + (parseInt(d.timestep_stop) - parseInt(d.timestep_start)) + 1;
        })
        el.time_spent = time_spent;
      });
 
      character_lst = character_lst.sort(function(a, b){
-       if (a.time_spent < b.time_spent) {return -1;}
-       if (a.time_spent > b.time_spent) {return 1;}
+       if (a.time_spent < b.time_spent) {return 1;}
+       if (a.time_spent > b.time_spent) {return -1;}
        if (a.time_spent == b.time_spent) {return 0;}
        if (a.character < b.character) {return -1;}
        if (a.character > b.character) {return 1;}
@@ -661,7 +675,7 @@ class Egoline{
    }
 
    _in_group(timestep,line_d,group_d){
-     return timestep >= line_d.timestep_start && timestep <= line_d.timestep_stop && timestep >= group_d.timestep_start && timestep <= group_d.timestep_stop;
+     return timestep >= +line_d.timestep_start && timestep <= +line_d.timestep_stop && timestep >= +group_d.timestep_start && timestep <= +group_d.timestep_stop;
    }
 
   _get_SP_d(data,clicked_line){
@@ -935,76 +949,93 @@ class Egoline{
   }
 
    _render_lines_interacting_with_ego(data){
+
+
+    var cont = d3.select("#analysis_view_div_"+this.lense_number);
+    cont.selectAll(".line_div").remove();
+    var div = cont.append("div")
+                 .attr("class","line_div")
+                 .style("width",this.width+80+"px")
+                 .style("height","112px")
+                 .style("position","absolute")
+                 .style("bottom","40px")
+                 .style("left","0px")
+                 .style("overflow-y","scroll");
+                 
+
      let num_characters = parseFloat(this.num_characters_interacting_with_ego);
-     const offset = 160,
+     const offset = 10,
           spacing = 10,
           _h = this.height,
-          _x = this.scale.x,
+          _x = d3.scaleLinear().range([0,this.width]).domain([this.range.start,this.range.stop]),
           _this = this,
           init_data = data;
 
      let _lense_label =  d3.select("#lense_label_"+this.lense_number), height_of_lines = num_characters*spacing, num_lines_removed = 0, frequency_data = [];
 
-     while(height_of_lines > _h - offset - 25 ){
-       num_lines_removed++;
-       frequency_data = frequency_data.concat(data.filter(function(d){ return d.order == num_lines_removed;}));
-       data = data.filter(function(d){ return d.order != num_lines_removed;});
-       height_of_lines -= spacing;
-     }
+      let show_str = function(){
+        if(num_characters>0) return "- - Showing "+(num_characters)+" lines from timestep "+_this.range.start+" to "+_this.range.stop + " - -";
+        else return "No Entities to Show";
+      };
 
-     const num_characters_left = function(){
-       const n = num_characters - num_lines_removed - 1;
-       if(n >= 0) return n;
-       return 0;
-     }
+      egoline_svg
+       .append("text")
+       .attr("x",0)
+       .attr("y",155)
+       .style("fill","#696969")
+       .style("font-size","14px")
+       .text("Entities");
 
-     const line = d3.line()
-                 .x(function(d){return _x(d.x) + _this.margin.left;})
-                 .y(function(d){return (d.y*spacing) + offset;});
+       egoline_svg
+        .append("text")
+        .attr("x",70)
+        .attr("y",155)
+        .style("fill","#696969")
+        .style("font-size","11px")
+        .text(show_str);
 
-    let show_str = function(){
-      if(num_characters>0) return "- - Showing "+(num_characters_left())+" out of "+(num_characters-1)+" lines from timestep "+_this.range.start+" to "+_this.range.stop + " - -";
-      else return "No Entities to Show";
-    };
+     var line_height = 130;
+     data.forEach(function(d){
+       if((d.order - 1)*spacing + offset + 20 >= line_height){
+         line_height = (d.order - 1)*spacing + offset + 20;
+       }
+     }) 
 
-    // Entities Label
-    egoline_svg
-     .append("text")
-     .attr("x",0)
-     .attr("y",155)
-     .style("fill","#696969")
-     .style("font-size","14px")
-     .text("Entities");
+    var newsvg = div.append("svg")
+                    .attr("class","line_svg")
+                    .style("width",this.width +80+"px")
+                    .style("height",line_height+"px")
+    const line = d3.line()
+                 .x(function(d){return _x(+d.x) + _this.margin.left + 10;})
+                 .y(function(d){return ((+d.y-1)*spacing) + offset;});
 
-     egoline_svg
-      .append("text")
-      .attr("x",70)
-      .attr("y",155)
-      .style("fill","#696969")
-      .style("font-size","11px")
-      .text(show_str);
+    newsvg.append("g")
+       .attr("class","line_graph")
+       .selectAll(".char_line")
+       .data(data)
+       .enter()
+       .append("path")
+       .attr("class",function(d){return "line_graph_"+d.character;})
+       .attr("d",function(d){
 
-     egoline_svg.append("g")
-         .attr("class", "interacting_entity_lines")
-         .selectAll(".interacting_entity_line")
-         .data(data)
-         .enter()
-         .append("path")
-         .attr("class", function(d){ return "egoline_line "+d.character})
-         .attr("d", function(d) {
            let t;
-           if(d.timestep_start == d.timestep_stop) t = [{x: parseFloat(d.timestep_start), y: parseFloat(d.order) - num_lines_removed}, {x: parseFloat(+d.timestep_stop+1), y: parseFloat(d.order) - num_lines_removed}];
-           else t = [{x: parseFloat(d.timestep_start), y: parseFloat(d.order) - num_lines_removed}, {x: parseFloat(d.timestep_stop+1), y: parseFloat(d.order) - num_lines_removed}];
-           if(d.timestep_start === _this.range.stop){
+           if(+d.timestep_start == +d.timestep_stop) t = [{x: parseFloat(+d.timestep_start), y: parseFloat(+d.order) - num_lines_removed}, {x: parseFloat(+d.timestep_stop+1), y: parseFloat(d.order) - num_lines_removed}];
+           else t = [{x: parseFloat(+d.timestep_start), y: parseFloat(+d.order) - num_lines_removed}, {x: parseFloat(+d.timestep_stop+1), y: parseFloat(+d.order) - num_lines_removed}];
+           if(+d.timestep_start === +_this.range.stop){
              t=[{x:0,y:0},{x:0,y:0}];
+//              console.log("1111"+t);
              return line(t);
            }
-           if(d.timestep_stop  === _this.range.stop){
-             t = [{x: parseFloat(d.timestep_start), y: parseFloat(d.order) - num_lines_removed}, {x: parseFloat(d.timestep_stop), y: parseFloat(d.order) - num_lines_removed}];
+           if(+d.timestep_stop  === +_this.range.stop){
+             t = [{x: parseFloat(+d.timestep_start), y: parseFloat(+d.order) - num_lines_removed}, {x: parseFloat(+d.timestep_stop), y: parseFloat(+d.order) - num_lines_removed}];
            }
+//            console.log("2222"+t);
            return line(t);
-         })
-         .on("mouseover", function(d) {
+
+       })
+       .style("stroke", "#9F9F9F")
+       .style("stroke-width", "4px")
+       .on("mouseover", function(d) {
            fade_line(d.character,0.15);
            _lense_label.text(d.character);
          })
@@ -1016,20 +1047,27 @@ class Egoline{
          .style("stroke", "#9F9F9F")
          .style("stroke-width", "4px");
 
-       egoline_svg.append("g")
-           .attr("class", "interacting-entity-lines-text")
-           .selectAll(".interacting-entity-lines-text")
-           .data(remove_duplicate_text(data))
-           .enter()
-           .append("text")
-           .attr("x",function(d){
-             return 0;
+    newsvg.append("g")
+       .attr("class","line_text")
+       .selectAll(".char_text")
+       .data(data)
+       .enter()
+       .append("text")
+       .attr("x",function(d){
+             return 12;
            })
-           .attr("y",function(d){
-             return ((parseFloat(d.order) - num_lines_removed)*spacing) + offset;
+       .attr("y",function(d){
+             return (parseFloat(d.order - 1)*spacing) + offset - 3;
            })
-           .attr("dy","0.55em")
-           .on("mouseover", function(d) {
+       .attr("dy","0.55em")
+       .style("fill", function(d){ return "#202020";})
+       .style("font-size", "11px")
+       .text(function(d){
+             if(d.character.length > 8)
+              return d.character.slice(0,8) + "...";
+            return d.character;
+        })
+        .on("mouseover", function(d) {
              // d3.select("#analysis_view_div_"+_this.lense_number).selectAll("."+d.character).transition().attr("transform","translate(30,0)");
              d3.select(this).transition().text(d.character);
              fade_line(d.character,0.15);
@@ -1054,18 +1092,128 @@ class Egoline{
             return d.character;
            });
 
-        this.frequency_data = {
-          d:frequency_data,
-          init_d: init_data
-        };
 
-        function remove_duplicate_text(data){
-          return data.filter((thing, index, self) =>
-             index === self.findIndex((t) => (
-               t.character === thing.character && t.order === thing.order
-             ))
-           )
-        };
+//      while(height_of_lines > _h - offset - 25 ){
+//        num_lines_removed++;
+//        frequency_data = frequency_data.concat(data.filter(function(d){ return d.order == num_lines_removed;}));
+//        data = data.filter(function(d){ return d.order != num_lines_removed;});
+//        height_of_lines -= spacing;
+//      }
+
+//      const num_characters_left = function(){
+//        const n = num_characters - num_lines_removed - 1;
+//        if(n >= 0) return n;
+//        return 0;
+//      }
+
+//      const line = d3.line()
+//                  .x(function(d){return _x(d.x) + _this.margin.left;})
+//                  .y(function(d){return (d.y*spacing) + offset;});
+
+//     let show_str = function(){
+//       if(num_characters>0) return "- - Showing "+(num_characters_left())+" out of "+(num_characters-1)+" lines from timestep "+_this.range.start+" to "+_this.range.stop + " - -";
+//       else return "No Entities to Show";
+//     };
+
+//     // Entities Label
+//     egoline_svg
+//      .append("text")
+//      .attr("x",0)
+//      .attr("y",155)
+//      .style("fill","#696969")
+//      .style("font-size","14px")
+//      .text("Entities");
+
+//      egoline_svg
+//       .append("text")
+//       .attr("x",70)
+//       .attr("y",155)
+//       .style("fill","#696969")
+//       .style("font-size","11px")
+//       .text(show_str);
+
+//      egoline_svg.append("g")
+//          .attr("class", "interacting_entity_lines")
+//          .selectAll(".interacting_entity_line")
+//          .data(data)
+//          .enter()
+//          .append("path")
+//          .attr("class", function(d){ return "egoline_line "+d.character})
+//          .attr("d", function(d) {
+//            let t;
+//            if(d.timestep_start == d.timestep_stop) t = [{x: parseFloat(d.timestep_start), y: parseFloat(d.order) - num_lines_removed}, {x: parseFloat(+d.timestep_stop+1), y: parseFloat(d.order) - num_lines_removed}];
+//            else t = [{x: parseFloat(d.timestep_start), y: parseFloat(d.order) - num_lines_removed}, {x: parseFloat(d.timestep_stop+1), y: parseFloat(d.order) - num_lines_removed}];
+//            if(d.timestep_start === _this.range.stop){
+//              t=[{x:0,y:0},{x:0,y:0}];
+//              return line(t);
+//            }
+//            if(d.timestep_stop  === _this.range.stop){
+//              t = [{x: parseFloat(d.timestep_start), y: parseFloat(d.order) - num_lines_removed}, {x: parseFloat(d.timestep_stop), y: parseFloat(d.order) - num_lines_removed}];
+//            }
+//            return line(t);
+//          })
+//          .on("mouseover", function(d) {
+//            fade_line(d.character,0.15);
+//            _lense_label.text(d.character);
+//          })
+//          .on("mouseout", function(d) {
+//           fade_line(null,0.65);
+//           d3.select("#storylines_g_child").selectAll(".group").style("opacity",0.3);
+//            _lense_label.text(lense.placeholder_text);
+//          })
+//          .style("stroke", "#9F9F9F")
+//          .style("stroke-width", "4px");
+
+//        egoline_svg.append("g")
+//            .attr("class", "interacting-entity-lines-text")
+//            .selectAll(".interacting-entity-lines-text")
+//            .data(remove_duplicate_text(data))
+//            .enter()
+//            .append("text")
+//            .attr("x",function(d){
+//              return 0;
+//            })
+//            .attr("y",function(d){
+//              return ((parseFloat(d.order) - num_lines_removed)*spacing) + offset;
+//            })
+//            .attr("dy","0.55em")
+//            .on("mouseover", function(d) {
+//              // d3.select("#analysis_view_div_"+_this.lense_number).selectAll("."+d.character).transition().attr("transform","translate(30,0)");
+//              d3.select(this).transition().text(d.character);
+//              fade_line(d.character,0.15);
+//              _lense_label.text(d.character);
+//            })
+//            .on("mouseout", function(d) {
+//              // d3.select("#analysis_view_div_"+_this.lense_number).selectAll("."+d.character).transition().attr("transform","translate(0,0)");
+//              if(d.character.length > 8)
+//                 d3.select(this).transition().text(d.character.slice(0,8) + "...");
+//              else{
+//                 d3.select(this).transition().text(d.character);
+//              }
+//             fade_line(null,0.65);
+//             d3.select("#storylines_g_child").selectAll(".group").style("opacity",0.3);
+//              _lense_label.text(lense.placeholder_text);
+//            })
+//            .style("fill", function(d){ return _this._get_line_clr(d.character);})
+//            .style("font-size", "11px")
+//            .text(function(d){
+//              if(d.character.length > 8)
+//               return d.character.slice(0,8) + "...";
+//             return d.character;
+//            });
+
+//         this.frequency_data = {
+//           d:frequency_data,
+//           init_d: init_data
+//         };
+
+//         function remove_duplicate_text(data){
+//           return data.filter((thing, index, self) =>
+//              index === self.findIndex((t) => (
+//                t.character === thing.character && t.order === thing.order
+//              ))
+//            )
+//         };
 
    }
 
@@ -1101,7 +1249,7 @@ class Egoline{
         _svg.append("text")
           .attr("x",45)
           .attr("y",function(d){
-            return _h + 4;
+            return _h + 5 ;
           })
           .style("font-size", "12px")
           .text("Analyzing entities that interact with: ")
@@ -1111,7 +1259,7 @@ class Egoline{
            .attr("class", "ego-text")
            .attr("x",240)
            .attr("y",function(d){
-             return _h + 2;
+             return _h + 3;
            })
            .attr("dy","0.2em")
            .on("mouseover",reveal_text)

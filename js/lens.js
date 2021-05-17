@@ -14,7 +14,7 @@ const lense = {
   "width" : {
     "group":440,
     "single line":350,
-    "outlier":510,
+    "outlier":500,
     "trend":750,
     "context":300,
     "flow":300
@@ -811,6 +811,8 @@ class Lense {
      var outlier_chart_width = lense.width["outlier"];
      var outlier_chart_height = lense.height["outlier"];
 
+     var set_height = cur_height + padding_h;
+
      if(this.type == "outlier"){
 
      graph_num = get_characters(d0,d1);
@@ -821,14 +823,15 @@ class Lense {
      cur_width = Math.min( Math.max(cur_width, 480), 640) + 10;
      cur_height = Math.min(Math.max(cur_height,480), 640) + 20;
 
+     set_height = cur_height + padding_h - 25;
      }
-
+     
 
      const background = d3.select('body').append('div')
        .attr('class','analysis_view_div')
        .attr('id','analysis_view_div_'+lense_number)
        .style('width',cur_width + padding_w + 'px')
-       .style('height', cur_height + padding_h + 'px')
+       .style('height', set_height+ 'px')
        .style('top',y+"px")
        .style('left',x+"px");
 
@@ -1000,13 +1003,14 @@ class Lense {
                   // d3.select("#analysis_view_"+lense_number).selectAll('.nodes').remove();
                   d3.select("#analysis_view_"+lense_number).selectAll("text").remove();
                   d3.select("#analysis_view_"+lense_number).selectAll("rect").remove();
+                  d3.select("#analysis_view_"+lense_number).selectAll("#pies").remove();
                   d3.select("#analysis_view_div_"+lense_number).select(".chart-div")
                     .append("div")
                     .attr("class","temp-view")
                     .style("top","0")
                     .style("left","0")
                     .style("width","100%")
-                    .style("height","95%")
+                    .style("height","100%")
                     .style("background-color","black")
                     .style("position","absolute")
                     .style("opacity","0.3");
@@ -1024,7 +1028,8 @@ class Lense {
                   d3.selectAll(".temp-view").remove();
                   d3.select("#analysis_view_"+lense_number).selectAll("text").remove();
                   d3.select("#analysis_view_"+lense_number).selectAll("rect").remove();
-                  show_outlier_analysis(d3.select("#analysis_view_"+lense_number),$('#analysis_view_div_'+lense_number).height()-padding_h,$('#analysis_view_div_'+lense_number).width()-padding_w,d0,d1,lense_number);
+                  d3.select("#analysis_view_"+lense_number).selectAll("#pies").remove();
+                  show_outlier_analysis(d3.select("#analysis_view_"+lense_number),$('#analysis_view_div_'+lense_number).height()-padding_h,$('#analysis_view_div_'+lense_number).width()-padding_w,_this.selected_range.start,_this.selected_range.stop,lense_number);
                 }
       });
     }
@@ -1034,7 +1039,7 @@ class Lense {
       //create_egoline_graph(lense_number,character,d3.select("#analysis_view_"+lense_number).select('svg'), $.extend(true, [], _bubbleset_data),bar_x,clicked_line_1,parseFloat(div.select('.chart-div').style("height")),$('#analysis_view_div_'+lense_number).width()-20,d0,d1);
 
       $('#analysis_view_div_'+lense_number).resizable({
-        /*maxHeight: 780,*/ minHeight: 280, /*maxWidth: 700,*/ minWidth: 350,
+        maxHeight: 440, minHeight: 440, /*maxWidth: 700,*/ minWidth: 350,
 
         start:  function(){
                   update_anchor_lines(lense_number);
@@ -1086,8 +1091,9 @@ class Lense {
         _this.trend.create_heatmap(d3.select('#analysis_view_div_'+lense_number).select('svg'),d,d0,d1,$('#analysis_view_div_'+lense_number).height()-padding_h,$('#analysis_view_div_'+lense_number).width()-padding_w);
       }
       else if (analysis_type == "outlier") {
+        let now_h = String($('#analysis_view_div_'+lense_number).height()-padding_h + 35) - 10 + 'px';
         d3.select(_id).select(".chart-div")
-          .style("height",_h)
+          .style("height",now_h)
           .style("width",_w);
         // show_outlier_analysis(d3.select("#analysis_view_"+lense_number),$('#analysis_view_div_'+lense_number).height()-padding_h,$('#analysis_view_div_'+lense_number).width()-padding_w,d0,d1,lense_number);
       }
@@ -1212,8 +1218,10 @@ class Lense {
       const new_range = {start:+d3_timestep_label.select("#start").node().value,stop:+d3_timestep_label.select("#stop").node().value};
       _this.set_selected_range(new_range);
       timestep_marker_lst[n-1].update_range(new_range);
-
-      _this.axis.set_range(new_range).resizeAxis({width:parseFloat(_w)});
+      
+      if(_this.type !== "outlier"){
+          _this.axis.set_range(new_range).resizeAxis({width:parseFloat(_w)});
+      }
 
       const d0 = +_this.selected_range.start,
             d1 = +_this.selected_range.stop;
@@ -1872,8 +1880,8 @@ class OnChartLense {
           height = parseFloat(_this.div.style("height"));
 
     //Create Contour Plot
-    const color = d3.scaleSequential(d3.interpolateOranges)
-        .domain([0, 0.04]); // Points per square pixel.
+    var color = d3.scaleSequential(d3.interpolateOranges)
+        .domain([0, 0.01]); // Points per square pixel.
 
     let color_lst = [];
 
@@ -1896,8 +1904,31 @@ class OnChartLense {
         (newdata))
       .enter().append("path")
         .attr("class","map_path")
+        .attr("opacity",0)
         .attr("fill", function(d) {
           color_lst.push(d.value);
+          return color(d.value);
+        })
+        .attr("d", d3.geoPath())
+        .attr("transform","translate(11,"+ 15 +")");
+   path.selectAll("path").remove();
+
+
+   color = d3.scaleSequential(d3.interpolateOranges)
+        .domain([0, d3.max(color_lst)]); // Points per square pixel.
+
+    path
+      .selectAll("path")
+      .data(d3.contourDensity()
+          .x(function(d) { return x(d.x); })
+          .y(function(d) { return y(d.y); })
+          .size([width, height])
+          .bandwidth(10)
+        (newdata))
+      .enter().append("path")
+        .attr("class","map_path")
+        .attr("opacity",0.7)
+        .attr("fill", function(d) {
           return color(d.value);
         })
         .attr("d", d3.geoPath())
@@ -2534,7 +2565,7 @@ function add_timestep_range_selection(group){
     .attr("class", "select_brush")
     // .attr("transform", "translate(" + (0) + "," + (storylines_g_margin.bottom + (default_chart_styles.spacing_y) - storyline_height) + ")")
     .call(d3.brushX()
-        .extent([[graph_x(1), 0], [default_chart_styles.spacing_x - graph_x(2), default_chart_styles.spacing_y - 100]]) //
+        .extent([[graph_x(0), 0], [graph_x(lengthOfStoryline - 1), default_chart_styles.spacing_y - 100]]) //
         .on("start", function(){
           brushstart();
         })

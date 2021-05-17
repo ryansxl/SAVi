@@ -14,10 +14,10 @@ let storylines_g,
 /*
   Zoom
  */
-var rescaled_graph_x,
-    rescaled_graph_y;
+// var rescaled_graph_x,
+//     rescaled_graph_y;
 
-    storylines_g_margin = {top:40,right:0,bottom:25,left:20};
+storylines_g_margin = {top:40,right:0,bottom:25,left:20};
 
 const chart_svg_margin = {bottom:100};
 
@@ -526,12 +526,13 @@ function create_lines(g,d){
 
       d.values.forEach(function(curr,index){
         if(index>1 && (curr.timestep > +d.values[index-1].timestep + 1 || index == d.values.length - 1)){
-          if(index == lengthOfStoryline-1) line_data.push(curr); // this line right here is what determines if the "line jump" is renderered or not
+          if(index == d.values.length - 1) line_data.push(curr); // this line right here is what determines if the "line jump" is renderered or not
           line_render({
             "characters":d.characters,
             "values":line_data
           });
           line_data = [];
+          line_data.push(curr);
         }
         else{
           line_data.push(curr);

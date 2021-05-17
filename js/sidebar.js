@@ -506,6 +506,9 @@ function change_analysis_mode(mode){
 
 
      console.log('000000000',mode);
+      for(let i=0; i < group_lst.length; i++){
+        d3.selectAll("." +group_lst[i]).style("opacity",0.7).style("stroke","black").style("stroke-width","0px");
+      }       
      switch(mode){
        case "Group_mode":
            group_mode_active = true;
